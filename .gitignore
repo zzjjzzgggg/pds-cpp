@@ -1,0 +1,6 @@
+build/
+.ccls-cache/
+*.json
+*.o
+*.dat
+*.bak
