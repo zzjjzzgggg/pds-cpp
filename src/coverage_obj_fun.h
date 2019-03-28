@@ -1,5 +1,5 @@
 /**
- * Copyright (C) by J.Z. 2018-08-24 21:30
+ * Copyright (C) by J.Z. 2019-03-27 09:46
  * Distributed under terms of the MIT license.
  */
 
@@ -10,24 +10,29 @@
 
 class CoverageObjFun : public ObjFun {
 private:
-    graph::bi::BGraph graph_;  // L: user, R: venue
+    std::unordered_map<int, std::vector<int>> user_venues_;
 
 private:
     template <class Iter>
     double getVal(const Iter first, const Iter last) const;
 
     template <class Iter>
-    double getGain(const int v, const Iter first, const Iter last) const;
+    double getGain(const int u, const Iter first, const Iter last) const;
 
 public:
-    CoverageObjFun(const std::string& bin_file) : ObjFun() {
-        graph_ = graph::loadBinary<graph::bi::BGraph>(bin_file);
-        printf("LNodes: %d, RNodes: %d, Edges: %d\n", graph_.getNodesL(),
-               graph_.getNodesR(), graph_.getEdges());
+    // "input_file" should contain two columns in the form {(user, venue)}. Then
+    // a map {user -> venue_vector} will be constructed.
+    CoverageObjFun(const std::string& input_file) : ObjFun() {
+        ioutils::TSVParser ss(input_file);
+        while (ss.next()) {
+            int u = ss.get<int>(0), v = ss.get<int>(1);
+            user_venues_[u].push_back(v);
+        }
     }
 
-    double getVal(const int v) const override {
-        return graph_.getNodeL(v).getDeg();
+    double getVal(const int u) const override {
+        if (user_venues_.find(u) == user_venues_.end()) return 0;
+        return user_venues_.at(u).size();
     }
 
     double getVal(const std::vector<int>& S) const override {
@@ -54,38 +59,31 @@ double CoverageObjFun::getVal(const Iter first, const Iter last) const {
     if (first == last) return 0;
     std::unordered_set<int> covered;
     for (auto it = first; it != last; ++it) {
-        if (graph_.isNodeL(*it)) {
-            const auto& nd_v = graph_.getNodeL(*it);
-            covered.insert(nd_v.beginNbr(), nd_v.endNbr());
-        }
+        auto search = user_venues_.find(*it);
+        if (search != user_venues_.end())
+            covered.insert(search->second.begin(), search->second.end());
     }
-    return covered.size();
+    return 0;
 }
 
 template <class Iter>
-double CoverageObjFun::getGain(const int v, const Iter first,
+double CoverageObjFun::getGain(const int u, const Iter first,
                                const Iter last) const {
-    if (!graph_.isNodeL(v)) return 0;
-    if (first == last)
-        return getVal(v);
-    else {
-        std::unordered_set<int> covered;
-        // covered users by S
-        for (auto it = first; it != last; ++it) {
-            if (graph_.isNodeL(*it)) {
-                const auto& nd = graph_.getNodeL(*it);
-                covered.insert(nd.beginNbr(), nd.endNbr());
-            }
-        }
-        int rwd_S = covered.size();
+    if (user_venues_.find(u) == user_venues_.end()) return 0;
+    if (first == last) return getVal(u);
 
-        // covered users by v
-        if (graph_.isNodeL(v)) {
-            const auto& nd = graph_.getNodeL(v);
-            covered.insert(nd.beginNbr(), nd.endNbr());
-        }
-        return covered.size() - rwd_S;
+    std::unordered_set<int> covered;
+    for (auto it = first; it != last; ++it) {
+        auto search = user_venues_.find(*it);
+        if (search != user_venues_.end())
+            covered.insert(search->second.begin(), search->second.end());
     }
+
+    int rwd_S = covered.size();
+    auto vec = user_venues_.at(u);
+    covered.insert(vec.begin(), vec.end());
+
+    return covered.size() - rwd_S;
 }
 
 #endif /* __COVERAGE_OBJ_FUN_H__ */

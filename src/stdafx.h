@@ -20,3 +20,4 @@
 #include <graph/graph.h>
 
 using namespace fmt::literals;
+using BernoulliSet = std::vector<int>;

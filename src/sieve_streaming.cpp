@@ -7,20 +7,20 @@
 
 void SieveStreaming::addTheta(const int i) {
     int pos;
-    if (!recycle_bin_.empty()) {  // if have available room
+    if (!recycle_bin_.empty()) {  // if recycle_bin has an unoccupied room
         pos = recycle_bin_.top();
         recycle_bin_.pop();
-        S_buf_[pos].clear();  // make sure it is clean
-    } else {                  // otherwise realloc room
-        pos = S_buf_.size();
-        S_buf_.push_back(std::unordered_set<int>());
+        candidate_buf_[pos].clear();
+    } else {  // otherwise realloc room
+        pos = candidate_buf_.size();
+        candidate_buf_.emplace_back(num_samples_);
     }
     thi_pos_[i] = pos;
 }
 
 void SieveStreaming::delTheta(const int i) {
     int pos = thi_pos_[i];
-    S_buf_[pos].clear();
+    candidate_buf_[pos].clear();
     recycle_bin_.push(pos);
     thi_pos_.erase(i);
 }
@@ -43,26 +43,28 @@ void SieveStreaming::updateThresholds() {
     for (int i = li; i <= new_ui; i++) addTheta(i);
 }
 
-// TODO add cache
-double SieveStreaming::getGain(const int v, const std::unordered_set<int>& S) {
-    ++calls_;
-    return obj_ptr_->getGain(v, S);
+double SieveStreaming::getGain(const int i, const int e,
+                               const BernoulliSet& bs) const {
+    const Candidate& candidate = getCandidate(i);
+    double gain = 0;
+    for (int trial : bs) gain += obj_ptr_->getGain(e, candidate.S_vec_[trial]);
+    return gain / num_samples_;
 }
 
-void SieveStreaming::feed(const int v) {
+void SieveStreaming::feed(const int e, const BernoulliSet& bs) {
     // update maximum gain and thresholds
-    double val = obj_ptr_->getVal(v);
+    double val = obj_ptr_->getVal(e) * bs.size() / num_samples_;
     if (val > gain_mx_) {
         gain_mx_ = val;
         updateThresholds();
     }
-    // sieve
+    // sieve-streaming
     for (auto& pr : thi_pos_) {
         int i = pr.first;
-        auto& S = getS(i);
-        if (S.find(v) == S.end() && S.size() < budget_) {
-            double threshold = getThreshold(i), gain = getGain(v, S);
-            if (gain >= threshold) S.insert(v);
+        auto& candidate = getCandidate(i);
+        if (!candidate.isMember(e) && candidate.size() < budget_) {
+            double threshold = getThreshold(i), gain = getGain(i, e, bs);
+            if (gain >= threshold) candidate.insert(e, bs);
         }
     }
 }
@@ -72,7 +74,8 @@ std::pair<int, double> SieveStreaming::getResult() const {
     double rwd_mx = 0;
     for (auto& pr : thi_pos_) {
         int i = pr.first;
-        double rwd = obj_ptr_->getVal(getS(i));
+        auto&& items = getCandidate(i).getMembers();
+        double rwd = obj_ptr_->getVal(items);
         if (rwd > rwd_mx) {
             rwd_mx = rwd;
             i_mx = i;
@@ -81,10 +84,9 @@ std::pair<int, double> SieveStreaming::getResult() const {
     return std::make_pair(i_mx, rwd_mx);
 }
 
-void SieveStreaming::reset() {
-    calls_ = 0;
+void SieveStreaming::clear() {
     gain_mx_ = 0;
     thi_pos_.clear();
     while (!recycle_bin_.empty()) recycle_bin_.pop();
-    for (auto& S : S_buf_) S.clear();
+    for (auto& S : candidate_buf_) S.clear();
 }

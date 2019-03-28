@@ -7,16 +7,17 @@
 #define __SIEVE_STREAMING_H__
 
 #include "obj_fun.h"
+#include "candidate.h"
 
 class SieveStreaming {
 private:
-    int budget_, calls_ = 0;
+    int num_samples_, budget_;
     double eps_, gain_mx_ = 0;
 
     const ObjFun* obj_ptr_;
 
-    std::vector<std::unordered_set<int>> S_buf_;
-    std::map<int, int> thi_pos_;  // theta_index --> set_position
+    std::vector<Candidate> candidate_buf_;
+    std::map<int, int> thi_pos_;  // theta_index --> buf_position
     std::stack<int> recycle_bin_;
 
 private:
@@ -25,28 +26,30 @@ private:
         return std::pow(1 + eps_, i) / (2 * budget_);
     }
 
-    // Given a threshold index i, return set S.
-    inline std::unordered_set<int>& getS(const int i) {
-        return S_buf_[thi_pos_.at(i)];
+    // Given a threshold index i, return candidate c.
+    inline const Candidate& getCandidate(const int i) const {
+        return candidate_buf_.at(thi_pos_.at(i));
     }
 
-    inline const std::unordered_set<int>& getS(const int i) const {
-        return S_buf_[thi_pos_.at(i)];
+    inline Candidate& getCandidate(const int i) {
+        return candidate_buf_[thi_pos_.at(i)];
     }
 
-    // Add a new threshold with index i.
+    // Calculate the gain of item e w.r.t. the candidate indexed by i.
+    double getGain(const int i, const int e, const BernoulliSet& bs) const;
+
+    // Add a new threshold indexed by i.
     void addTheta(const int i);
     void delTheta(const int i);
-
     void updateThresholds();
 
-    double getGain(const int v, const std::unordered_set<int>& S);
-
 public:
-    SieveStreaming(const int budget, const double eps, const ObjFun* obj_ptr)
-        : budget_(budget), eps_(eps), obj_ptr_(obj_ptr) {
+    SieveStreaming(const int num_samples, const int budget, const double eps,
+                   const ObjFun* obj_ptr)
+        : num_samples_(num_samples), budget_(budget), eps_(eps),
+          obj_ptr_(obj_ptr) {
         // |\Theta| = O(\epsilon^{-1}\log 2k)
-        S_buf_.reserve((int)(std::log2(2 * budget_) / eps_));
+        candidate_buf_.reserve((int)(std::log2(2 * budget_) / eps_));
     }
 
     /**
@@ -54,8 +57,8 @@ public:
      */
     SieveStreaming(const SieveStreaming& o)
         : budget_(o.budget_), eps_(o.eps_), gain_mx_(o.gain_mx_),
-          obj_ptr_(o.obj_ptr_), S_buf_(o.S_buf_), thi_pos_(o.thi_pos_),
-          recycle_bin_(o.recycle_bin_) {}
+          obj_ptr_(o.obj_ptr_), candidate_buf_(o.candidate_buf_),
+          thi_pos_(o.thi_pos_), recycle_bin_(o.recycle_bin_) {}
 
     /**
      * Copy assignment.
@@ -65,35 +68,21 @@ public:
         eps_ = o.eps_;
         gain_mx_ = o.gain_mx_;
         obj_ptr_ = o.obj_ptr_;
-        S_buf_ = o.S_buf_;
+        candidate_buf_ = o.candidate_buf_;
         thi_pos_ = o.thi_pos_;
         recycle_bin_ = o.recycle_bin_;
         return *this;
     }
 
-    void feed(const int v);
-    void feedVec(const std::vector<int>& vec) {
-        for (int v : vec) feed(v);
-    }
+    void feed(const int e, const BernoulliSet& bs);
 
-    /**
-     * If deep = true, then clean everything, including obj_ptr_ and maintaned
-     * graph; otherwise, only clean temporal results maintaned in obj_ptr_.
-     */
-    void reset();
+    void clear();
 
     /**
      * Get current maximum reward
      */
     std::pair<int, double> getResult() const;
-
-    std::vector<int> getSolution(const int i) const {
-        const auto& S = getS(i);
-        return std::vector<int>(S.begin(), S.end());
-    }
-
     int getNumThresholds() const { return thi_pos_.size(); }
-    int getOCalls() const { return calls_; }
 
 }; /* SieveStreaming */
 
