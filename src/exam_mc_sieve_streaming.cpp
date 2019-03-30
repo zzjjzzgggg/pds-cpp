@@ -5,12 +5,12 @@
 
 #include "coverage_obj_fun.h"
 #include "bernoulli_set_generator.h"
-#include "sieve_streaming.h"
+#include "mc_sieve_streaming.h"
 
 #include <gflags/gflags.h>
 
 DEFINE_string(dat, "", "input data file");
-DEFINE_int32(n, 100, "number of samples");
+DEFINE_int32(n, 10, "number of samples");
 DEFINE_int32(B, 10, "budget");
 DEFINE_int32(T, 100, "end time");
 DEFINE_double(p, 0.5, "decaying rate");
@@ -24,9 +24,9 @@ int main(int argc, char *argv[]) {
 
     auto obj_file = osutils::join(strutils::getBasePath(FLAGS_dat), "obj.gz");
     CoverageObjFun obj(obj_file);
-    SieveStreaming sieve(FLAGS_n, FLAGS_B, FLAGS_eps, &obj);
-
     BernoulliSetGenerator bsgen(FLAGS_n, FLAGS_p);
+
+    MCSieveStreaming sieve(FLAGS_n, FLAGS_B, FLAGS_eps, &obj);
 
     int t = 0;
     std::vector<std::tuple<int, double, int>> rst;
@@ -35,17 +35,17 @@ int main(int argc, char *argv[]) {
 
     ioutils::TSVParser ss(FLAGS_dat);
     while (ss.next()) {
+        ++t;
         int e = ss.get<int>(0);
         BernoulliSet bs = bsgen.getBernoulliSet();
+
         sieve.feed(e, bs);
-        ++t;
 
-        int calls = 0;  // sieve.getOCalls();
+        int cost = sieve.getCost();
         double val = sieve.getResult().second;
-        rst.emplace_back(t, val, calls);
+        rst.emplace_back(t, val, cost);
 
-        printf("\t%-12d%-12.0f%-12d%-12d\r", t, val, calls,
-               sieve.getNumThresholds());
+        printf("\t%-12d%-12.0f%-12d%-12d\r", t, val, cost, sieve.size());
         fflush(stdout);
 
         if (t == FLAGS_T) break;

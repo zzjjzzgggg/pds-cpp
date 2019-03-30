@@ -10,6 +10,7 @@
 
 /**
  * The candidate items corresponding to a threshold.
+ * NOTE: The init(n) should be called explicitly before using.
  */
 class Candidate {
 public:
@@ -17,11 +18,13 @@ public:
     std::vector<std::vector<int>> S_vec_;  // { S_\theta^i: i=1,...,n }
 
 public:
-    Candidate(const int num_samples) { S_vec_.reserve(num_samples); }
+    Candidate() {}
 
     inline bool isMember(const int e) const { return S_.find(e) != S_.end(); }
 
     inline int size() const { return S_.size(); }
+
+    inline void init(const int num_samples) { S_vec_.resize(num_samples); }
 
     void clear() {
         S_.clear();
@@ -35,6 +38,16 @@ public:
 
     std::vector<int> getMembers() const {
         return std::vector<int>(S_.begin(), S_.end());
+    }
+
+    void info() const {
+        printf("S: ");
+        ioutils::printSet(S_);
+        int i = 0;
+        for (auto& vec : S_vec_) {
+            printf("S[%d]: ", i++);
+            ioutils::printVec(vec);
+        }
     }
 
 }; /* Candidate */

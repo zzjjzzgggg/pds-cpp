@@ -63,7 +63,7 @@ double CoverageObjFun::getVal(const Iter first, const Iter last) const {
         if (search != user_venues_.end())
             covered.insert(search->second.begin(), search->second.end());
     }
-    return 0;
+    return covered.size();
 }
 
 template <class Iter>

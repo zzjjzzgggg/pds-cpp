@@ -9,6 +9,7 @@
 
 #include "lifespan_generator.h"
 #include "bernoulli_segment.h"
+#include "candidate.h"
 
 #include <gflags/gflags.h>
 
@@ -72,18 +73,38 @@ void test_lifespan() {
 }
 
 void test_segments(const std::vector<int>& lifespans) {
-    // a vector of (lifespan, trial) pairs
+    // a vector of (trial, lifespan) pairs
     std::vector<std::pair<int, int>> samples;
     samples.reserve(lifespans.size());
     int i = 0;
     for (auto lifespan : lifespans) samples.emplace_back(i++, lifespan);
 
-    BernoulliSegments segs(1, std::move(samples));
+    BernoulliSegments segs(std::move(samples));
 
-    for (const auto& seg : segs.getBernoulliSegments()) {
-        printf("[%d, %d]: ", seg.start_, seg.end_);
+    for (const auto& seg : segs.segments_) {
+        printf("[%d, %d): ", seg.start_, seg.end_);
         print_vec(seg.bs_);
     }
+}
+
+void test_candidate_copy() {
+    Candidate c1;
+    c1.init(10);
+    c1.insert(1, {1, 3, 5});
+    c1.insert(2, {0, 2, 3});
+    printf("\nc1:\n");
+    c1.info();
+
+    Candidate c2 = c1;
+    printf("\nc2:\n");
+    c2.info();
+
+    c2.insert(3, {0, 1, 2});
+    printf("\nc2 inserted:\n");
+    c2.info();
+
+    printf("\nc1:\n");
+    c1.info();
 }
 
 int main(int argc, char* argv[]) {
@@ -92,8 +113,9 @@ int main(int argc, char* argv[]) {
     osutils::Timer tm;
 
     // test_lifespan();
-    // test_segments({2, 4, 6, 4});
-    test_segments({41, 301, 27, 128, 10});
+    test_segments({1, 4, 6, 4});
+    // test_segments({41, 301, 27, 128, 10});
+    // test_candidate_copy();
 
     printf("cost time %s\n", tm.getStr().c_str());
     gflags::ShutDownCommandLineFlags();

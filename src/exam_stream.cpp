@@ -30,8 +30,8 @@ int main(int argc, char* argv[]) {
     while (ss.next() && ss.getLineNO() < 10) {
         int e = ss.get<int>(0);
         printf("\n%d:\n", e);
-        BernoulliSegments bsegs(e, lifegen.getTrialLifespanPairs(FLAGS_n));
-        for (const auto& seg : bsegs.getBernoulliSegments()) {
+        BernoulliSegments bsegs(lifegen.getTrialLifespanPairs(FLAGS_n));
+        for (const auto& seg : bsegs.segments_) {
             printf("[%d, %d]: ", seg.start_, seg.end_);
             print_vec(seg.bs_);
         }

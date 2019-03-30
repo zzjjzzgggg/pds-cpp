@@ -9,8 +9,8 @@
 
 
 # library
-add_library(sieve_streaming sieve_streaming.cpp)
-target_link_libraries(sieve_streaming ${LIBRARIES})
+add_library(mc_sieve_streaming mc_sieve_streaming.cpp)
+target_link_libraries(mc_sieve_streaming ${LIBRARIES})
 
 
 # execute
@@ -23,5 +23,20 @@ target_link_libraries(exam_obj ${LIBRARIES})
 add_executable(exam_stream exam_stream.cpp)
 target_link_libraries(exam_stream ${LIBRARIES})
 
-add_executable(exam_sieve_streaming exam_sieve_streaming.cpp)
-target_link_libraries(exam_sieve_streaming sieve_streaming ${LIBRARIES})
+add_executable(exam_mc_sieve_streaming exam_mc_sieve_streaming.cpp)
+target_link_libraries(exam_mc_sieve_streaming mc_sieve_streaming ${LIBRARIES})
+
+add_executable(exam_greedy_insertion_only exam_greedy_insertion_only.cpp)
+target_link_libraries(exam_greedy_insertion_only ${LIBRARIES})
+
+add_executable(exam_greedy_mcss exam_greedy_mcss.cpp)
+target_link_libraries(exam_greedy_mcss mc_sieve_streaming ${LIBRARIES})
+
+add_executable(exam_mcssopd exam_mcssopd.cpp)
+target_link_libraries(exam_mcssopd mc_sieve_streaming ${LIBRARIES})
+
+add_executable(exam_greedy_pds exam_greedy_pds.cpp)
+target_link_libraries(exam_greedy_pds ${LIBRARIES})
+
+add_executable(exam_greedy_mcssopd exam_greedy_mcssopd.cpp)
+target_link_libraries(exam_greedy_mcssopd mc_sieve_streaming ${LIBRARIES})
