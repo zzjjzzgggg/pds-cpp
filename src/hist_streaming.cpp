@@ -89,7 +89,7 @@ void HistStreaming::reduce() {
         }
         (*j)->uncertainty_ = (*i)->upper() * eps_;
         algs_.erase(++i, j);
-        ++i;
+        i = j;
     }
 }
 
