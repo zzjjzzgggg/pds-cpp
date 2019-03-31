@@ -12,6 +12,8 @@
 add_library(mc_sieve_streaming mc_sieve_streaming.cpp)
 target_link_libraries(mc_sieve_streaming ${LIBRARIES})
 
+add_library(hist_streaming hist_streaming.cpp)
+target_link_libraries(hist_streaming mc_sieve_streaming ${LIBRARIES})
 
 # execute
 add_executable(test-me test-me.cpp)
@@ -40,3 +42,6 @@ target_link_libraries(exam_greedy_pds ${LIBRARIES})
 
 add_executable(exam_greedy_mcssopd exam_greedy_mcssopd.cpp)
 target_link_libraries(exam_greedy_mcssopd mc_sieve_streaming ${LIBRARIES})
+
+add_executable(exam_hist_streaming exam_hist_streaming.cpp)
+target_link_libraries(exam_hist_streaming hist_streaming ${LIBRARIES})

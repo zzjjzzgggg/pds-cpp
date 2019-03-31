@@ -107,15 +107,25 @@ void test_candidate_copy() {
     c1.info();
 }
 
+void test() {
+    int i = 1;
+    int j = 2, l = i;
+    if (i == --j || ++l == j) {
+        ++i;
+    }
+    printf("i=%d, j=%d, l=%d\n", i, j, l);
+}
+
 int main(int argc, char* argv[]) {
     gflags::SetUsageMessage("usage:");
     gflags::ParseCommandLineFlags(&argc, &argv, true);
     osutils::Timer tm;
 
     // test_lifespan();
-    test_segments({1, 4, 6, 4});
+    // test_segments({1, 4, 6, 4});
     // test_segments({41, 301, 27, 128, 10});
     // test_candidate_copy();
+    test();
 
     printf("cost time %s\n", tm.getStr().c_str());
     gflags::ShutDownCommandLineFlags();

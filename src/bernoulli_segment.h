@@ -60,6 +60,9 @@ public:
         }
     }
 
+    int getMnIdx() const { return segments_.front().end_ - 1; }
+    int getMxIdx() const { return segments_.back().end_ - 1; }
+
 }; /* BernoulliSegments */
 
 #endif /* __BERNOULLI_SEGMENT_H__ */
