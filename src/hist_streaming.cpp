@@ -30,6 +30,8 @@ void HistStreaming::insertBefore(const int idx, const int e,
     alg->delta_ = alg->uncertainty_ = (*it)->uncertainty_;
 }
 
+// TODO: When seg.end - seg.begin is small, there is no need to use parallel
+// computation.
 void HistStreaming::feedSegment(const int e, const BernoulliSegment& seg,
                                 std::list<Alg*>::iterator& alg_it) {
     auto job = [e, &seg](Alg* alg) { alg->feed(e, seg.bs_); };
@@ -69,18 +71,18 @@ void HistStreaming::feed(const int e, const BernoulliSegments& segs) {
 }
 
 void HistStreaming::reduce() {
+    // For each i, find the largest j s.t. g(j) >= (1-e)g(i).
     auto i = algs_.begin();
     while (i != algs_.end()) {
-        // find the largest j s.t. g(j) >= (1-e)g(i)
         auto j = i, l = i;
         if (++j == algs_.end()) break;
         double bound = (*i)->upper() * (1 - eps_);
         while (j != algs_.end() && (*j)->lower() >= bound) ++j;
-        if (--j == i || ++l == j) {  // j and l will be at the correct position
+        if (--j == i || ++l == j) {
             ++i;
             continue;
         }
-        // (*l) now points to the first instance to be deleted.
+        // Now (*l) points to the first instance to be deleted.
         (*i)->uncertainty_ = (*l)->uncertainty_;
         while (l != j) {
             del_cost_ += (*l)->getCost();
@@ -95,6 +97,7 @@ void HistStreaming::reduce() {
 
 void HistStreaming::next() {
     if (algs_.front()->idx_ == 0) {
+        del_cost_ += algs_.front()->getCost();
         delete algs_.front();
         algs_.pop_front();
     }

@@ -19,11 +19,11 @@ private:
         MCSieveStreaming* ptr_;
 
     public:
-        int idx_;              // instance index
-        double val_ = 0,       // current utility value
-            delta_ = 0,        // uncertainty of this instance
-            uncertainty_ = 0;  // uncertainty of this interval (each interval's
-                               // uncertainty is stored at the tail index)
+        int idx_;             // instance index
+        double val_ = 0,      // current utility value
+            delta_ = 0,       // uncertainty of this instance
+            uncertainty_ = 0; /* uncertainty of this interval (each interval's
+                                 uncertainty is stored at the tail index) */
 
     public:
         Alg(const int idx, const int num_samples, const int budget,
@@ -65,14 +65,12 @@ private:
 private:
     /**
      * Create a new instance at the tail if need.
-     *
      * - "idx": the maximum position that an instance should exist.
      */
     void newEndIfNeed(const int idx);
 
     /**
      * Insert a new instance at the head.
-     *
      * - "idx": the new instance's index,
      * - "e": new element,
      * - "bs": new element's Bernoulli set,
@@ -83,7 +81,6 @@ private:
 
     /**
      * Insert a new instance before position "it".
-     *
      * - "idx": the new instance's index,
      * - "e": new element,
      * - "bs": new element's Bernoulli set,

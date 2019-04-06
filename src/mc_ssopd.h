@@ -11,7 +11,7 @@
 
 class MCSSOPD {
 private:
-    int L_, cur_ = 0;  // cur_ points to the instance with l = 0
+    int L_, cur_ = 0, del_cost_ = 0;  // cur_ points to the instance with l = 0
 
     std::vector<MCSieveStreaming*> sieve_ptrs_;
 
@@ -43,12 +43,13 @@ public:
      * Clear states and prepare for next round processing.
      */
     void next() {
+        del_cost_ += sieve_ptrs_[cur_]->getCost();
         sieve_ptrs_[cur_]->clear();
         cur_ = (cur_ + 1) % L_;
     }
 
     int getCost() const {
-        int cost = 0;
+        int cost = del_cost_;
         for (int i = 0; i < L_; ++i) cost += sieve_ptrs_[i]->getCost();
         return cost;
     }

@@ -25,7 +25,7 @@ private:
     };
 
 private:
-    int num_samples_, budget_, calls_ = 0;
+    int num_samples_, budget_, cost_ = 0;
 
     const ObjFun* obj_ptr_;
     Candidate chosen_;
@@ -70,7 +70,7 @@ public:
                 rwd += e.gain;
             } else {
                 e.gain = getGain(e.node, bs);
-                ++calls_;
+                ++cost_;
                 e.t = t;
                 pq.push(std::move(e));
             }
@@ -78,7 +78,7 @@ public:
         return rwd;
     }
 
-    int getCost() const { return calls_; }
+    int getCost() const { return cost_; }
 
     void saveSolution(const std::string& filename) const {
         ioutils::saveVec(chosen_.getMembers(), filename);
