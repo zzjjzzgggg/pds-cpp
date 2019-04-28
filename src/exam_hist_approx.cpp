@@ -1,12 +1,12 @@
 /**
- * Copyright (C) by J.Z. 2018-08-25 10:06
+ * Copyright (C) by J.Z. 2018-08-25 11:11
  * Distributed under terms of the MIT license.
  */
 
 #include "coverage_obj_fun.h"
 #include "lifespan_generator.h"
 #include "bernoulli_segment.h"
-#include "mc_ssopd.h"
+#include "hist_approx.h"
 
 #include <gflags/gflags.h>
 
@@ -15,21 +15,21 @@ DEFINE_string(stream, "stream.gz", "input streaming data file name");
 DEFINE_string(lifespans, "", "lifespans file name full path");
 DEFINE_string(obj, "obj_bin.gz", "objective file name");
 DEFINE_bool(objbin, true, "is objective file binary format?");
-DEFINE_int32(L, 10, "maximum lifetime");
+DEFINE_int32(L, 5000, "maximum lifetime");
 DEFINE_int32(n, 10, "number of samples");
-DEFINE_int32(B, 10, "budget");
+DEFINE_int32(B, 10, "B");
 DEFINE_int32(T, 100, "end time");
 DEFINE_double(q, .001, "decaying rate");
 DEFINE_double(eps, 0.2, "epsilon");
 DEFINE_bool(save, true, "save results or not");
 
 int main(int argc, char *argv[]) {
-    gflags::SetUsageMessage("xxxx");
+    gflags::SetUsageMessage("xxx");
     gflags::ParseCommandLineFlags(&argc, &argv, true);
     osutils::Timer tm;
 
     CoverageObjFun obj(osutils::join(FLAGS_dir, FLAGS_obj), FLAGS_objbin);
-    MCSSOPD ssopd(FLAGS_L, FLAGS_n, FLAGS_B, FLAGS_eps, &obj);
+    HistApprox hist(FLAGS_n, FLAGS_B, FLAGS_eps, &obj);
 
     // If lifespan file name is not empty and exists on disk, then read
     // lifespans from file; Otherwise, generate random lifespans.
@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
     std::vector<int> lifespans;
     std::vector<std::tuple<int, double, int>> rst;
 
-    printf("\t%-12s%-12s%-12s\n", "time", "value", "cost");
+    printf("\t%-12s%-12s%-12s%-12s\n", "time", "value", "#calls", "#algs");
 
     ioutils::TSVParser ss(osutils::join(FLAGS_dir, FLAGS_stream));
     while (ss.next()) {
@@ -57,15 +57,16 @@ int main(int argc, char *argv[]) {
             lifegen.getLifespans(FLAGS_n, lifespans);
         BernoulliSegments segs(lifespans);
 
-        ssopd.feed(e, segs);
-        int cost = ssopd.getCost();
-        double val = ssopd.getResult().second;
+        hist.feed(e, segs);
 
-        ssopd.next();
-
+        int cost = hist.getCost();
+        double val = hist.getResult();
         rst.emplace_back(t, val, cost);
 
-        printf("\t%-12d%-12.0f%-12d\r", t, val, cost);
+        hist.reduce();
+        hist.next();
+
+        printf("\t%-12d%-12.0f%-12d%-12d\r", t, val, cost, hist.size());
         fflush(stdout);
 
         if (t == FLAGS_T) break;
@@ -76,7 +77,7 @@ int main(int argc, char *argv[]) {
     if (FLAGS_save) {
         std::string ofnm = osutils::join(
             FLAGS_dir,
-            "MC-SSOPD_K{}q{:g}e{:g}T{}.dat"_format(
+            "HistApprox_K{}q{:g}e{:g}T{}.dat"_format(
                 FLAGS_B, FLAGS_q, FLAGS_eps, strutils::prettyNumber(FLAGS_T)));
         ioutils::saveTripletVec(rst, ofnm, "{}\t{:.2f}\t{}\n");
     }

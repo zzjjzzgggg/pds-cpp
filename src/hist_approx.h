@@ -3,13 +3,16 @@
  * Distributed under terms of the MIT license.
  */
 
-#ifndef __HIST_STREAMING_H__
-#define __HIST_STREAMING_H__
+#ifndef __HIST_APPROX_H__
+#define __HIST_APPROX_H__
 
 #include "bernoulli_segment.h"
 #include "mc_sieve_streaming.h"
 
-class HistStreaming {
+/**
+ * Using a histgram to approximate a curve.
+ */
+class HistApprox {
 private:
     /**
      * Wraper of the MC-SieveStreaming instance.
@@ -70,16 +73,6 @@ private:
     void newEndIfNeed(const int idx);
 
     /**
-     * Insert a new instance at the head.
-     * - "idx": the new instance's index,
-     * - "e": new element,
-     * - "bs": new element's Bernoulli set,
-     * - "it": insert before this position. Specially, it = algs.begin().
-     */
-    void insertHead(const int idx, const int e, const BernoulliSet& bs,
-                    const std::list<Alg*>::iterator& it);
-
-    /**
      * Insert a new instance before position "it".
      * - "idx": the new instance's index,
      * - "e": new element,
@@ -92,23 +85,26 @@ private:
     /**
      * Feed the segment's Bernoulli set to each instance belonging to this
      * segment, and alg_it points to the instance outside of the segment.
+     *
+     * TODO when (seg.end - seg.begin) is small, there is no need to use
+     * parallel computation.
      */
     void feedSegment(const int e, const BernoulliSegment& seg,
-                     std::list<Alg*>::iterator& alg_it);
+                     std::list<Alg*>::iterator& it);
 
 public:
-    HistStreaming(const int num_samples, const int budget, const double eps,
-                  const ObjFun* obj)
+    HistApprox(const int num_samples, const int budget, const double eps,
+               const ObjFun* obj)
         : num_samples_(num_samples), budget_(budget), eps_(eps), obj_ptr_(obj) {
     }
 
-    virtual ~HistStreaming() {
+    virtual ~HistApprox() {
         for (auto it = algs_.begin(); it != algs_.end(); ++it) delete *it;
     }
 
     /**
      * Process an element e with Bernoulli segments segs.
-     * NOTE: Will scan the instance list from head to tail.
+     * NOTE: will scan the instance list from head to tail.
      *
      * - "e": new element,
      * - "segs": segments of Bernoulli sets.
@@ -143,6 +139,6 @@ public:
     // Get the number of algorithm instances.
     int size() const { return algs_.size(); }
 
-}; /* HistStreaming */
+}; /* HistApprox */
 
-#endif /* __HIST_STREAMING_H__ */
+#endif /* __HIST_APPROX_H__ */

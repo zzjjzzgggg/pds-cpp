@@ -22,11 +22,36 @@ private:
 public:
     // "input_file" should contain two columns in the form {(user, venue)}. Then
     // a map {user -> venue_vector} will be constructed.
-    CoverageObjFun(const std::string& input_file) : ObjFun() {
-        ioutils::TSVParser ss(input_file);
-        while (ss.next()) {
-            int u = ss.get<int>(0), v = ss.get<int>(1);
-            user_venues_[u].push_back(v);
+    CoverageObjFun(const std::string& input_file, const bool isBinary = false)
+        : ObjFun() {
+        if (isBinary) {
+            load(input_file);
+        } else {
+            ioutils::TSVParser ss(input_file);
+            while (ss.next()) {
+                int u = ss.get<int>(0), v = ss.get<int>(1);
+                user_venues_[u].push_back(v);
+            }
+        }
+    }
+
+    void save(const std::string& filename) const {
+        auto po = ioutils::getIOOut(filename);
+        po->save((int)user_venues_.size());
+        for (auto& pr : user_venues_) {
+            po->save(pr.first);
+            po->save(pr.second);
+        }
+    }
+
+    void load(const std::string& filename) {
+        int total, usr;
+        auto pi = ioutils::getIOIn(filename);
+        pi->load(total);
+        user_venues_.reserve(total);
+        for (int i = 0; i < total; ++i) {
+            pi->load(usr);
+            pi->load(user_venues_[usr]);
         }
     }
 

@@ -13,54 +13,6 @@
 
 #include <gflags/gflags.h>
 
-// Merge two sorted vectors into one vector where duplicated elements are saved
-// only once.
-std::vector<int> merge_sorted_vectors(std::vector<int>& v1,
-                                      std::vector<int>& v2) {
-    std::vector<int> vec;
-    vec.reserve(v1.size() + v2.size());
-    int p1 = 0, p2 = 0;
-    while (true) {
-        // if p1 reaches the end, then copy v2[p2:] to vec
-        if (p1 == v1.size()) {
-            while (p2 < v2.size()) vec.push_back(v2[p2++]);
-            break;
-        }
-        // else if p2 reaches the end, then copy v1[p1:] to vec
-        if (p2 == v2.size()) {
-            while (p1 < v1.size()) vec.push_back(v1[p1++]);
-            break;
-        }
-        // otherwise, both p1 and p2 do not point at ends
-        if (v1[p1] == v2[p2]) {
-            vec.push_back(v1[p1]);
-            ++p1;
-            ++p2;
-        } else if (v1[p1] < v2[p2]) {
-            vec.push_back(v1[p1]);
-            ++p1;
-        } else {
-            vec.push_back(v2[p2]);
-            ++p2;
-        }
-    }
-    return vec;
-}
-
-void print_vec(const std::vector<int>& vec) {
-    printf("{");
-    for (int v : vec) printf("%d, ", v);
-    printf("}\n");
-}
-
-void test_merge() {
-    std::vector<int> v1 = {0, 3, 17, 130};
-    std::vector<int> v2 = {0, 3, 17, 19, 20, 130, 131};
-
-    auto vec = merge_sorted_vectors(v1, v2);
-    print_vec(vec);
-}
-
 void test_lifespan() {
     LifespanGenerator sampler(1000, 0.3);
 
@@ -72,19 +24,17 @@ void test_lifespan() {
     }
 }
 
-void test_segments(const std::vector<int>& lifespans) {
-    // a vector of (trial, lifespan) pairs
-    std::vector<std::pair<int, int>> samples;
-    samples.reserve(lifespans.size());
-    int i = 0;
-    for (auto lifespan : lifespans) samples.emplace_back(i++, lifespan);
-
-    BernoulliSegments segs(std::move(samples));
+void test_segments() {
+    LifespanGenerator lifegen(1000, 0.01);
+    auto lifespans = lifegen.getLifespans(10);
+    BernoulliSegments segs(lifespans);
 
     for (const auto& seg : segs.segments_) {
         printf("[%d, %d): ", seg.start_, seg.end_);
-        print_vec(seg.bs_);
+        // print_vec(seg.bs_);
     }
+
+    printf("max idx: %d\n", segs.getMxIdx());
 }
 
 void test_candidate_copy() {
@@ -108,12 +58,30 @@ void test_candidate_copy() {
 }
 
 void test() {
-    int i = 1;
-    int j = 2, l = i;
-    if (i == --j || ++l == j) {
-        ++i;
+    std::list<double> arr = {1, .9, .8, .7, .65, .6, .5, .4, .3, .2, .1};
+    auto i = arr.begin();
+    while (i != arr.end()) {
+        printf("*i=%g, ", *i);
+        auto j = i, l = i;
+        double bound = (*i) * .8;
+        while (++j != arr.end() && (*j) >= bound)
+            ;
+        if (j == arr.end()) break;
+        printf("*j=%g\n", *j);
+        if (--j == i || ++l == j) {
+            ++i;
+            continue;
+        }
+        arr.erase(++i, j);
+        i = j;
+
+        printf("\n");
+        for (double x : arr) printf("%g, ", x);
+        printf("\n");
     }
-    printf("i=%d, j=%d, l=%d\n", i, j, l);
+    printf("\n");
+    for (double x : arr) printf("%g, ", x);
+    printf("\n");
 }
 
 int main(int argc, char* argv[]) {
@@ -122,7 +90,7 @@ int main(int argc, char* argv[]) {
     osutils::Timer tm;
 
     // test_lifespan();
-    // test_segments({1, 4, 6, 4});
+    // test_segments();
     // test_segments({41, 301, 27, 128, 10});
     // test_candidate_copy();
     test();

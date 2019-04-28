@@ -48,6 +48,9 @@ public:
         cur_ = (cur_ + 1) % L_;
     }
 
+    /**
+     * Get the cumulative number of oracle calls.
+     */
     int getCost() const {
         int cost = del_cost_;
         for (int i = 0; i < L_; ++i) cost += sieve_ptrs_[i]->getCost();

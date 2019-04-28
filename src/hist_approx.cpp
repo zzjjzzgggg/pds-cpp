@@ -3,16 +3,16 @@
  * Distributed under terms of the MIT license.
  */
 
-#include "hist_streaming.h"
+#include "hist_approx.h"
 
-void HistStreaming::newEndIfNeed(const int idx) {
+void HistApprox::newEndIfNeed(const int idx) {
     if (algs_.empty() || algs_.back()->idx_ < idx)
         algs_.push_back(new Alg(idx, num_samples_, budget_, eps_, obj_ptr_));
 }
 
-void HistStreaming::insertHead(const int idx, const int e,
-                               const BernoulliSet& bs,
-                               const std::list<Alg*>::iterator& it) {
+void HistApprox::insertBefore(const int idx, const int e,
+                              const BernoulliSet& bs,
+                              const std::list<Alg*>::iterator& it) {
     Alg* alg = new Alg(*(*it));
     alg->idx_ = idx;
     alg->delta_ = alg->uncertainty_ = (*it)->uncertainty_;
@@ -20,30 +20,19 @@ void HistStreaming::insertHead(const int idx, const int e,
     algs_.insert(it, alg);
 }
 
-void HistStreaming::insertBefore(const int idx, const int e,
-                                 const BernoulliSet& bs,
-                                 const std::list<Alg*>::iterator& it) {
-    Alg* alg = new Alg(*(*it));
-    alg->idx_ = idx;
-    alg->feed(e, bs);
-    algs_.insert(it, alg);
-    alg->delta_ = alg->uncertainty_ = (*it)->uncertainty_;
-}
-
-// TODO: When seg.end - seg.begin is small, there is no need to use parallel
-// computation.
-void HistStreaming::feedSegment(const int e, const BernoulliSegment& seg,
-                                std::list<Alg*>::iterator& alg_it) {
+void HistApprox::feedSegment(const int e, const BernoulliSegment& seg,
+                             std::list<Alg*>::iterator& it) {
     auto job = [e, &seg](Alg* alg) { alg->feed(e, seg.bs_); };
     std::vector<std::future<void>> futures;
-    while (alg_it != algs_.end() && (*alg_it)->idx_ < seg.end_) {
-        futures.push_back(std::async(std::launch::async, job, *alg_it));
-        ++alg_it;
+    while (it != algs_.end() && (*it)->idx_ < seg.end_) {
+        futures.push_back(std::async(std::launch::async, job, *it));
+        ++it;
     }
     for (auto& future : futures) future.get();
 }
 
-void HistStreaming::feed(const int e, const BernoulliSegments& segs) {
+void HistApprox::feed(const int e, const BernoulliSegments& segs) {
+    // create a new tail instance if necessary
     newEndIfNeed(segs.getMxIdx());
 
     auto it = algs_.begin();
@@ -51,11 +40,12 @@ void HistStreaming::feed(const int e, const BernoulliSegments& segs) {
         // Update instances belonging to this segment.
         feedSegment(e, seg, it);
 
-        // If the last updated instance has index equal to sendment end, then
-        // there is no need to create new instance at the end of this segment.
+        // If the last updated instance has index equal to segment end, then we
+        // don't need to create a new instance at the end of this segment.
         auto pre = it;
         if (it != algs_.begin()) {
-            --pre;  // Now "pre" is the precessor of "it".
+            --pre;  // let "pre" be the precessor of "it"
+            // no need to create a new instance
             if ((*pre)->idx_ == seg.end_ - 1) continue;
         }
 
@@ -63,15 +53,14 @@ void HistStreaming::feed(const int e, const BernoulliSegments& segs) {
         // a new head. Otherwise, the new instance has a precessor, which is
         // "pre". In this case, we need to check the new instance's redundancy.
         // If the new instance is redundant, we do not need to create it.
-        if (it == algs_.begin())
-            insertHead(seg.end_ - 1, e, seg.bs_, it);
-        else if ((*it)->lower() < (1 - eps_) * (*pre)->upper())
+        if (it == algs_.begin() ||
+            (*it)->lower() < (1 - eps_) * (*pre)->upper())
             insertBefore(seg.end_ - 1, e, seg.bs_, it);
     }
 }
 
-void HistStreaming::reduce() {
-    // For each i, find the largest j s.t. g(j) >= (1-e)g(i).
+void HistApprox::reduce() {
+    // For each i, find the largest j such that g(j) >= (1-e)g(i).
     auto i = algs_.begin();
     while (i != algs_.end()) {
         auto j = i, l = i;
@@ -82,8 +71,11 @@ void HistStreaming::reduce() {
             ++i;
             continue;
         }
-        // Now (*l) points to the first instance to be deleted.
-        (*i)->uncertainty_ = (*l)->uncertainty_;
+        // Now (*l) points to the first instance to be deleted, (*j) points to
+        // the last instance that should be kept.
+
+        // cannot remember why do following operation? so comment it.
+        // (*i)->uncertainty_ = (*l)->uncertainty_;
         while (l != j) {
             del_cost_ += (*l)->getCost();
             delete *l;
@@ -95,7 +87,7 @@ void HistStreaming::reduce() {
     }
 }
 
-void HistStreaming::next() {
+void HistApprox::next() {
     if (algs_.front()->idx_ == 0) {
         del_cost_ += algs_.front()->getCost();
         delete algs_.front();

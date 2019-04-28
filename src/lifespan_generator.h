@@ -14,31 +14,43 @@
 class LifespanGenerator {
 private:
     const int L_;     // lifespan upper bound
-    const double q_;  // q = 1-p where p has the same meaning as the paper
+    const double q_;  // decaying rate: smaller means decaying slower q = 1 - p
 
-    rngutils::default_rng rng_;
+    mutable rngutils::default_rng rng_;
 
 public:
+    LifespanGenerator(const int L, const double q) : L_(L), q_(q) {}
+
     /**
-     * Parameter p has the same meaning as the paper.
+     * Return a sampled lifespan.
      */
-    LifespanGenerator(const int L, const double p) : L_(L), q_(1 - p) {}
+    int get() const { return std::min(rng_.geometric(q_) + 1, L_); }
 
-    int get() { return std::min(rng_.geometric(q_) + 1, L_); }
-
-    std::vector<int> getLifespanVec(const int n) {
+    /**
+     * Return a vector of lifespans.
+     */
+    std::vector<int> getLifespans(const int n) const {
         std::vector<int> vec;
         vec.reserve(n);
         for (int i = 0; i < n; ++i) vec.push_back(get());
         return vec;
     }
 
-    std::vector<std::pair<int, int>> getTrialLifespanPairs(const int n) {
-        std::vector<std::pair<int, int>> vec;
+    void getLifespans(const int n, std::vector<int>& vec) const {
         vec.reserve(n);
-        for (int i = 0; i < n; ++i) vec.emplace_back(i, get());
-        return vec;
+        for (int i = 0; i < n; ++i) vec.push_back(get());
     }
+
+    /**
+     * Return a vector of <trial_id, lifespan> pairs.
+     */
+    // std::vector<std::pair<int, int>> getTrialLifespanPairs(const int n) const
+    // {
+    //     std::vector<std::pair<int, int>> vec;
+    //     vec.reserve(n);
+    //     for (int i = 0; i < n; ++i) vec.emplace_back(i, get());
+    //     return vec;
+    // }
 };
 
 #endif /* __LIFESPAN_GEN_H__ */

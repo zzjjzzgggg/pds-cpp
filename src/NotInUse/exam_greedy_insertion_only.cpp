@@ -9,20 +9,22 @@
 
 #include <gflags/gflags.h>
 
-DEFINE_string(dat, "", "input data file");
+DEFINE_string(dir, "", "working directory");
+DEFINE_string(stream, "stream.gz", "input streaming data file name");
+DEFINE_string(obj, "obj_bin.gz", "objective file name");
 DEFINE_int32(n, 10, "number of samples");
 DEFINE_int32(B, 10, "budget");
 DEFINE_int32(T, 100, "end time");
 DEFINE_double(p, 0.5, "decaying rate");
 DEFINE_bool(save, true, "save results or not");
+DEFINE_bool(objbin, true, "is objective file binary format?");
 
 int main(int argc, char *argv[]) {
     gflags::SetUsageMessage("usage:");
     gflags::ParseCommandLineFlags(&argc, &argv, true);
     osutils::Timer tm;
 
-    auto obj_file = osutils::join(strutils::getBasePath(FLAGS_dat), "obj.gz");
-    CoverageObjFun obj(obj_file);
+    CoverageObjFun obj(osutils::join(FLAGS_dir, FLAGS_obj), FLAGS_objbin);
     BernoulliSetGenerator bsgen(FLAGS_n, FLAGS_p);
 
     GreedyAlg greedy(FLAGS_n, FLAGS_B, &obj);
@@ -33,7 +35,7 @@ int main(int argc, char *argv[]) {
 
     printf("\t%-12s%-12s%-12s%-12s\n", "time", "value", "#calls", "#nv_calls");
 
-    ioutils::TSVParser ss(FLAGS_dat);
+    ioutils::TSVParser ss(osutils::join(FLAGS_dir, FLAGS_stream));
     while (ss.next()) {
         ++t;
         int e = ss.get<int>(0);
@@ -55,11 +57,10 @@ int main(int argc, char *argv[]) {
 
     if (FLAGS_save) {
         // save results
-        std::string ofnm = strutils::insertMiddle(
-            FLAGS_dat, "greedy_insert_only_k{}"_format(FLAGS_B), "dat");
-        std::string ano = "#graph: {}\nbudget: {}\n#end time: {}\n"_format(
-            FLAGS_dat, FLAGS_B, FLAGS_T);
-        ioutils::saveTupleVec(rst, ofnm, true, "{}\t{:.1f}\t{}\t{}\n", ano);
+        std::string ofnm = osutils::join(
+            FLAGS_dir, "greedy_insert_only_K{}p{:g}T{}.dat"_format(
+                           FLAGS_B, FLAGS_p, strutils::prettyNumber(FLAGS_T)));
+        ioutils::saveTupleVec(rst, ofnm, true, "{}\t{:.1f}\t{}\t{}\n");
     }
 
     printf("cost time %s\n", tm.getStr().c_str());

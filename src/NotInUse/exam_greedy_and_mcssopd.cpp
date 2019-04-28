@@ -12,7 +12,9 @@
 
 #include <gflags/gflags.h>
 
-DEFINE_string(dat, "", "input data");
+DEFINE_string(dir, "", "working directory");
+DEFINE_string(stream, "stream.gz", "input streaming data file name");
+DEFINE_string(obj, "obj_bin.gz", "objective file name");
 DEFINE_int32(L, 10, "maximum lifetime");
 DEFINE_int32(n, 10, "number of samples");
 DEFINE_int32(B, 10, "budget");
@@ -20,14 +22,14 @@ DEFINE_int32(T, 100, "end time");
 DEFINE_double(p, 0.5, "decaying rate");
 DEFINE_double(eps, 0.2, "epsilon");
 DEFINE_bool(save, true, "save results or not");
+DEFINE_bool(objbin, true, "is objective file in binary format");
 
 int main(int argc, char *argv[]) {
-    gflags::SetUsageMessage("usage:");
+    gflags::SetUsageMessage("xxx");
     gflags::ParseCommandLineFlags(&argc, &argv, true);
     osutils::Timer tm;
 
-    auto obj_file = osutils::join(strutils::getBasePath(FLAGS_dat), "obj.gz");
-    CoverageObjFun obj(obj_file);
+    CoverageObjFun obj(osutils::join(FLAGS_dir, FLAGS_obj), FLAGS_objbin);
     LifespanGenerator lifegen(FLAGS_L, FLAGS_p);
     MCSSOPD ssopd(FLAGS_L, FLAGS_n, FLAGS_B, FLAGS_eps, &obj);
     EvalStream eval(FLAGS_L);
@@ -40,7 +42,7 @@ int main(int argc, char *argv[]) {
     printf("\t%-12s%-12s%-12s%-12s%-12s\n", "time", "val_ssopd", "val_greedy",
            "cost_ssopd", "cost_greedy");
 
-    ioutils::TSVParser ss(FLAGS_dat);
+    ioutils::TSVParser ss(osutils::join(FLAGS_dir, FLAGS_stream));
     while (ss.next()) {
         ++t;
         int e = ss.get<int>(0);
@@ -73,20 +75,15 @@ int main(int argc, char *argv[]) {
     if (FLAGS_save) {
         auto sT = strutils::prettyNumber(FLAGS_T);
         // MC-SSOPD
-        std::string ofnm = strutils::insertMiddle(
-            FLAGS_dat, "MC-SSOPD_k{}e{:g}T{}"_format(FLAGS_B, FLAGS_eps, sT),
-            "dat");
-        std::string ano =
-            "#graph: {}\nbudget: {}\n#end time: {}#eps: {:.2f}\n"_format(
-                FLAGS_dat, FLAGS_B, FLAGS_T, FLAGS_eps);
-        ioutils::saveTupleVec(mc_rst, ofnm, true, "{}\t{:.2f}\t{}\n", ano);
+        std::string ofnm = osutils::join(
+            FLAGS_dir,
+            "MC-SSOPD_k{}e{:g}T{}.dat"_format(FLAGS_B, FLAGS_eps, sT));
+        ioutils::saveTupleVec(mc_rst, ofnm, true, "{}\t{:.2f}\t{}\n");
 
         // Greedy
-        ofnm = strutils::insertMiddle(
-            FLAGS_dat, "greedy_pds_k{}T{}"_format(FLAGS_B, sT), "dat");
-        ano = "#graph: {}\nbudget: {}\n#end time: {}\n"_format(
-            FLAGS_dat, FLAGS_B, FLAGS_T);
-        ioutils::saveTupleVec(greedy_rst, ofnm, true, "{}\t{:.2f}\t{}\n", ano);
+        ofnm = osutils::join(FLAGS_dir,
+                             "greedy_pds_k{}T{}.dat"_format(FLAGS_B, sT));
+        ioutils::saveTupleVec(greedy_rst, ofnm, true, "{}\t{:.2f}\t{}\n");
     }
 
     printf("cost time %s\n", tm.getStr().c_str());

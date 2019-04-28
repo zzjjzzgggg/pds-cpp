@@ -8,40 +8,58 @@
 # target_compile_definitions(exam_sieve_adn_dg PRIVATE DGRAPH=1)
 
 
-# library
+####################################################################################
+##### library
+####################################################################################
 add_library(mc_sieve_streaming mc_sieve_streaming.cpp)
 target_link_libraries(mc_sieve_streaming ${LIBRARIES})
 
-add_library(hist_streaming hist_streaming.cpp)
-target_link_libraries(hist_streaming mc_sieve_streaming ${LIBRARIES})
+add_library(hist_approx hist_approx.cpp)
+target_link_libraries(hist_approx mc_sieve_streaming ${LIBRARIES})
 
-# execute
-add_executable(test-me test-me.cpp)
-target_link_libraries(test-me ${LIBRARIES})
+####################################################################################
+##### execute
+####################################################################################
+set(EXE test-me)
+add_executable(${EXE} ${EXE}.cpp)
+target_link_libraries(${EXE} ${LIBRARIES})
 
-add_executable(exam_obj exam_obj.cpp)
-target_link_libraries(exam_obj ${LIBRARIES})
+# set(EXE exam_obj)
+# add_executable(${EXE} ${EXE}.cpp)
+# target_link_libraries(${EXE} ${LIBRARIES})
 
-add_executable(exam_stream exam_stream.cpp)
-target_link_libraries(exam_stream ${LIBRARIES})
+set(EXE convert_to_bin)
+add_executable(${EXE} ${EXE}.cpp)
+target_link_libraries(${EXE} ${LIBRARIES})
 
-add_executable(exam_mc_sieve_streaming exam_mc_sieve_streaming.cpp)
-target_link_libraries(exam_mc_sieve_streaming mc_sieve_streaming ${LIBRARIES})
+set(EXE exam_stream)
+add_executable(${EXE} ${EXE}.cpp)
+target_link_libraries(${EXE} ${LIBRARIES})
 
-add_executable(exam_greedy_insertion_only exam_greedy_insertion_only.cpp)
-target_link_libraries(exam_greedy_insertion_only ${LIBRARIES})
+# set(EXE exam_mc_sieve_streaming)
+# add_executable(${EXE} ${EXE}.cpp)
+# target_link_libraries(${EXE} mc_sieve_streaming ${LIBRARIES})
 
-add_executable(exam_greedy_mcss exam_greedy_mcss.cpp)
-target_link_libraries(exam_greedy_mcss mc_sieve_streaming ${LIBRARIES})
+# set(EXE exam_greedy_insertion_only)
+# add_executable(${EXE} ${EXE}.cpp)
+# target_link_libraries(${EXE} ${LIBRARIES})
 
-add_executable(exam_mcssopd exam_mcssopd.cpp)
-target_link_libraries(exam_mcssopd mc_sieve_streaming ${LIBRARIES})
+set(EXE exam_greedy_and_mc_sieve_streaming)
+add_executable(${EXE} ${EXE}.cpp)
+target_link_libraries(${EXE} mc_sieve_streaming ${LIBRARIES})
 
-add_executable(exam_greedy_pds exam_greedy_pds.cpp)
-target_link_libraries(exam_greedy_pds ${LIBRARIES})
+set(EXE exam_mcssopd)
+add_executable(${EXE} ${EXE}.cpp)
+target_link_libraries(${EXE} mc_sieve_streaming ${LIBRARIES})
 
-add_executable(exam_greedy_mcssopd exam_greedy_mcssopd.cpp)
-target_link_libraries(exam_greedy_mcssopd mc_sieve_streaming ${LIBRARIES})
+set(EXE exam_greedy_pds)
+add_executable(${EXE} ${EXE}.cpp)
+target_link_libraries(${EXE} ${LIBRARIES})
 
-add_executable(exam_hist_streaming exam_hist_streaming.cpp)
-target_link_libraries(exam_hist_streaming hist_streaming ${LIBRARIES})
+# set(EXE exam_greedy_and_mcssopd)
+# add_executable(${EXE} ${EXE}.cpp)
+# target_link_libraries(${EXE} mc_sieve_streaming ${LIBRARIES})
+
+set(EXE exam_hist_approx)
+add_executable(${EXE} ${EXE}.cpp)
+target_link_libraries(${EXE} hist_approx ${LIBRARIES})

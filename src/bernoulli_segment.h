@@ -9,8 +9,9 @@
 #include "stdafx.h"
 
 /**
- * Bernoulli sets in the same segment are the same.
- * That is, I_l(e) for l\in [start, end) are the same.
+ * A Bernoulli segment.
+ * Bernoulli sets belonging to the same segment are the same.
+ * That is, I_l(e) for l in [start, end) are same.
  */
 class BernoulliSegment {
 public:
@@ -22,14 +23,30 @@ public:
         : start_(start), end_(end), bs_(std::move(bs)) {
         // std::sort(bs_.begin(), bs_.end());
     }
+
 }; /* BernoulliSegment */
 
+/**
+ * A vector of Bernoulli segments.
+ */
 class BernoulliSegments {
 public:
     std::vector<BernoulliSegment> segments_;
 
+private:
+    void init(std::vector<std::pair<int, int>> &&samples) {}
+
 public:
-    BernoulliSegments(std::vector<std::pair<int, int>> &&samples) {
+    /**
+     * Constructor.
+     * "lifespans" is a vector of lifespans.
+     */
+    BernoulliSegments(const std::vector<int> &lifespans) {
+        std::vector<std::pair<int, int>> samples;
+        samples.reserve(lifespans.size());
+        int i = 0;
+        for (int l : lifespans) samples.emplace_back(i++, l);
+
         // sort in ascending order of lifespan
         std::sort(samples.begin(), samples.end(),
                   [](std::pair<int, int> &a, std::pair<int, int> &b) {
@@ -60,7 +77,10 @@ public:
         }
     }
 
+    // Return the minimum trial ID in the Bernoulli segments.
     int getMnIdx() const { return segments_.front().end_ - 1; }
+
+    // Return the maximum trial ID in the Bernoulli segments.
     int getMxIdx() const { return segments_.back().end_ - 1; }
 
 }; /* BernoulliSegments */
