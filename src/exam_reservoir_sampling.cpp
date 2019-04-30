@@ -2,7 +2,6 @@
  * Copyright (C) by J.Z. 2019-04-30 15:32
  * Distributed under terms of the MIT license.
  */
-#include "stdafx.h"
 #include "biased_reservoir_sampler.h"
 #include <gflags/gflags.h>
 

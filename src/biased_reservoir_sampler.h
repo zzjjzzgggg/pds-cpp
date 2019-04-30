@@ -30,7 +30,7 @@ public:
             reservoir_.push_back(e);
     }
 
-    void echo() const {
+    void echo() {
         std::sort(reservoir_.begin(), reservoir_.end());
         ioutils::printVec(reservoir_);
     }
