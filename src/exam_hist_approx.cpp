@@ -3,6 +3,7 @@
  * Distributed under terms of the MIT license.
  */
 
+#include "stdafx.h"
 #include "coverage_obj_fun.h"
 #include "lifespan_generator.h"
 #include "bernoulli_segment.h"
@@ -42,7 +43,7 @@ int main(int argc, char *argv[]) {
 
     int t = 0;
     std::vector<int> lifespans;
-    std::vector<std::tuple<int, double, int>> rst;
+    std::vector<std::tuple<int, double, int, int>> rst;
 
     printf("\t%-12s%-12s%-12s%-12s\n", "time", "value", "#calls", "#algs");
 
@@ -61,12 +62,13 @@ int main(int argc, char *argv[]) {
 
         int cost = hist.getCost();
         double val = hist.getResult();
-        rst.emplace_back(t, val, cost);
+        int num_algs = hist.size();
+        rst.emplace_back(t, val, cost, num_algs);
 
         hist.reduce();
         hist.next();
 
-        printf("\t%-12d%-12.0f%-12d%-12d\r", t, val, cost, hist.size());
+        printf("\t%-12d%-12.0f%-12d%-12d\r", t, val, cost, num_algs);
         fflush(stdout);
 
         if (t == FLAGS_T) break;
@@ -79,7 +81,7 @@ int main(int argc, char *argv[]) {
             FLAGS_dir,
             "HistApprox_K{}q{:g}e{:g}T{}.dat"_format(
                 FLAGS_B, FLAGS_q, FLAGS_eps, strutils::prettyNumber(FLAGS_T)));
-        ioutils::saveTripletVec(rst, ofnm, "{}\t{:.2f}\t{}\n");
+        ioutils::saveTupleVec(rst, ofnm, "{}\t{:.2f}\t{}\t{}\n");
     }
 
     printf("cost time %s\n", tm.getStr().c_str());

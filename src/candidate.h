@@ -10,7 +10,7 @@
 
 /**
  * The candidate items corresponding to a threshold.
- * NOTE: The init(n) should be called explicitly before using.
+ * NOTE: Function init(n) should be called at first.
  */
 class Candidate {
 public:

@@ -63,3 +63,11 @@ target_link_libraries(${EXE} ${LIBRARIES})
 set(EXE exam_hist_approx)
 add_executable(${EXE} ${EXE}.cpp)
 target_link_libraries(${EXE} hist_approx ${LIBRARIES})
+
+set(EXE exam_random)
+add_executable(${EXE} ${EXE}.cpp)
+target_link_libraries(${EXE} ${LIBRARIES})
+
+# set(EXE exam_reservoir_sampling)
+# add_executable(${EXE} ${EXE}.cpp)
+# target_link_libraries(${EXE} ${LIBRARIES})

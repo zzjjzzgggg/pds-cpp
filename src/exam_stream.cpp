@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
     LifespanGenerator lifegen(FLAGS_L, FLAGS_q);
 
     auto filename = osutils::join(
-        FLAGS_dir, "lifespans_q{:g}n{}L{}T{}_bin.gz"_format(
+        FLAGS_dir, "q{:g}n{}L{}T{}_bin.gz"_format(
                        FLAGS_q, FLAGS_n, strutils::prettyNumber(FLAGS_L),
                        strutils::prettyNumber(FLAGS_T)));
     auto pout = ioutils::getIOOut(filename);

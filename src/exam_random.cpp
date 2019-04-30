@@ -6,9 +6,8 @@
 #include "coverage_obj_fun.h"
 #include "lifespan_generator.h"
 #include "bernoulli_segment.h"
-
+#include "candidate.h"
 #include "eval_stream.h"
-#include "greedy_alg.h"
 
 #include <gflags/gflags.h>
 
@@ -24,14 +23,15 @@ DEFINE_double(q, .001, "decaying rate");
 DEFINE_bool(save, true, "save results or not");
 DEFINE_bool(objbin, true, "is objective file in binary format");
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
     gflags::SetUsageMessage("usage:");
     gflags::ParseCommandLineFlags(&argc, &argv, true);
     osutils::Timer tm;
 
     CoverageObjFun obj(osutils::join(FLAGS_dir, FLAGS_obj), FLAGS_objbin);
-    GreedyAlg greedy(FLAGS_n, FLAGS_B, &obj);
     EvalStream eval(FLAGS_L);
+    Candidate chosen;
+    rngutils::default_rng rng;
 
     // If lifespan file name is not empty and exists on disk, then read
     // lifespans from file; Otherwise, generate random lifespans.
@@ -44,9 +44,9 @@ int main(int argc, char *argv[]) {
 
     int t = 0;
     std::vector<int> lifespans;
-    std::vector<std::tuple<int, double, int>> rst;
+    std::vector<std::pair<int, double>> rst;
 
-    printf("\t%-12s%-12s%-12s%-12s\n", "time", "value", "#cost", "|V|");
+    printf("\t%-12s%-12s%-12s\n", "time", "value", "|V|");
 
     ioutils::TSVParser ss(osutils::join(FLAGS_dir, FLAGS_stream));
     while (t++ < FLAGS_T && ss.next()) {
@@ -61,14 +61,27 @@ int main(int argc, char *argv[]) {
         eval.add(e, segs);
 
         auto pop = eval.getPop();
-        double val = greedy.run(pop);
-        int cost = greedy.getCost();
+        chosen.clear();
+        chosen.init(FLAGS_n);
+
+        if (pop.size() > FLAGS_B) {
+            std::vector<int> elements;
+            for (auto& pr : pop) elements.push_back(pr.first);
+            for (int s : rngutils::choice(elements, FLAGS_B, rng))
+                chosen.insert(e, pop[s]);
+        } else {
+            for (auto& pr : pop) chosen.insert(pr.first, pr.second);
+        }
+
+        double val = 0;
+        for (int i = 0; i < FLAGS_n; ++i) val += obj.getVal(chosen.S_vec_[i]);
+        val /= FLAGS_n;
 
         eval.next();
 
-        rst.emplace_back(t, val, cost);
+        rst.emplace_back(t, val);
 
-        printf("\t%-12d%-12.0f%-12d%-12lu\r", t, val, cost, pop.size());
+        printf("\t%-12d%-12.0f%-12lu\r", t, val, pop.size());
         fflush(stdout);
     }
     printf("\n");
@@ -76,9 +89,9 @@ int main(int argc, char *argv[]) {
     if (FLAGS_save) {
         // save results
         std::string ofnm = osutils::join(
-            FLAGS_dir, "greedy_pds_K{}q{:g}T{}.dat"_format(
+            FLAGS_dir, "random_K{}q{:g}T{}.dat"_format(
                            FLAGS_B, FLAGS_q, strutils::prettyNumber(FLAGS_T)));
-        ioutils::saveTupleVec(rst, ofnm, "{}\t{:.2f}\t{}\n");
+        ioutils::savePrVec(rst, ofnm, "{}\t{:.2f}\n");
     }
 
     printf("cost time %s\n", tm.getStr().c_str());
