@@ -93,7 +93,10 @@ int main(int argc, char* argv[]) {
     // test_segments();
     // test_segments({41, 301, 27, 128, 10});
     // test_candidate_copy();
-    test();
+    // test();
+    int a = 2;
+    a *= 3 - 1;
+    printf("%d\n", a);
 
     printf("cost time %s\n", tm.getStr().c_str());
     gflags::ShutDownCommandLineFlags();

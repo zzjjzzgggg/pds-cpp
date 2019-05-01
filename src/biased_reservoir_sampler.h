@@ -9,25 +9,34 @@
 #include "stdafx.h"
 
 class BiasedReservoir {
-private:
+public:
     int capacity_;
-    double pin_;
+    double lambda_, pin_;
+
+    rngutils::default_rng rng_;
     std::vector<int> reservoir_;
 
 public:
-    BiasedReservoir(const int capacity) : capacity_(capacity), pin_(1) {
+    BiasedReservoir(const int capacity, const double lambda)
+        : capacity_(capacity), lambda_(lambda), pin_(1) {
         reservoir_.reserve(capacity);
     }
 
     // process an incoming item e
     void process(const int e) {
-        rngutils::default_rng rng;
-        if (rng.uniform() > pin_) return;
+        if (rng_.uniform() > pin_) return;
+
         int num = reservoir_.size();
-        if (rng.uniform() <= num / (double)capacity_)
-            reservoir_[rng.randint(0, num - 1)] = e;
-        else
+        if (rng_.uniform() < num * lambda_ / pin_) {  // num / capacity_mx
+            reservoir_[rng_.randint(0, num - 1)] = e;
+        } else {  // if reservoir is full, delete one sample, and reduce pin
+            if (num == capacity_) {
+                pin_ *= 1 - 1.0 / capacity_;
+                reservoir_[rng_.randint(0, num - 1)] = reservoir_.back();
+                reservoir_.pop_back();
+            }
             reservoir_.push_back(e);
+        }
     }
 
     void echo() {
