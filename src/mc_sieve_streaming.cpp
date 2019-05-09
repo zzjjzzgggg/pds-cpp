@@ -77,7 +77,7 @@ void MCSieveStreaming::feed(const int e, const BernoulliSet& bs) {
 
 std::pair<int, double> MCSieveStreaming::getResult() const {
     int i_mx = -1;
-    double rwd_mx = -1;
+    double rwd_mx = 0;
     for (auto& pr : thi_pos_) {
         int i = pr.first;
         double rwd = getVal(getCandidate(i));

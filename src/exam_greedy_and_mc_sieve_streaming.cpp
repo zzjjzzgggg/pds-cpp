@@ -44,6 +44,7 @@ int main(int argc, char *argv[]) {
         ++t;
         int e = ss.get<int>(0);
         BernoulliSet bs = pop[e] = bsgen.getBernoulliSet();
+        // ioutils::printVec(bs);
 
         // MC-SieveStreaming
         sieve.feed(e, pop[e]);

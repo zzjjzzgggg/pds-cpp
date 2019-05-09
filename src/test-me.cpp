@@ -11,6 +11,7 @@
 #include "bernoulli_segment.h"
 #include "candidate.h"
 
+#include <Eigen/Dense>
 #include <gflags/gflags.h>
 
 void test_lifespan() {
@@ -84,6 +85,15 @@ void test() {
     printf("\n");
 }
 
+void test_eigen() {
+    Eigen::MatrixXd m(2, 2);
+    m(0, 0) = 3;
+    m(1, 0) = 2.5;
+    m(0, 1) = -1;
+    m(1, 1) = m(1, 0) + m(0, 1);
+    std::cout << m << std::endl;
+}
+
 int main(int argc, char* argv[]) {
     gflags::SetUsageMessage("usage:");
     gflags::ParseCommandLineFlags(&argc, &argv, true);
@@ -94,9 +104,8 @@ int main(int argc, char* argv[]) {
     // test_segments({41, 301, 27, 128, 10});
     // test_candidate_copy();
     // test();
-    int a = 2;
-    a *= 3 - 1;
-    printf("%d\n", a);
+    // test_eigen();
+    printf("%d\n", FEATURE_DIM);
 
     printf("cost time %s\n", tm.getStr().c_str());
     gflags::ShutDownCommandLineFlags();

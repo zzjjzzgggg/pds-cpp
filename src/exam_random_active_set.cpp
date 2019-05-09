@@ -3,7 +3,7 @@
  * Distributed under terms of the MIT license.
  */
 
-#include "coverage_obj_fun.h"
+#include "active_set_obj_fun.h"
 #include "lifespan_generator.h"
 #include "bernoulli_segment.h"
 #include "candidate.h"
@@ -12,24 +12,35 @@
 #include <gflags/gflags.h>
 
 DEFINE_string(dir, "", "working directory");
-DEFINE_string(stream, "stream.gz", "input streaming data file name");
+DEFINE_string(feature, "feature.gz", "feature data file name");
 DEFINE_string(lifespans, "", "lifespans file name full path");
-DEFINE_string(obj, "obj_bin.gz", "objective file name");
 DEFINE_int32(L, 5000, "maximum lifetime");
 DEFINE_int32(n, 10, "number of samples");
 DEFINE_int32(B, 10, "budget");
 DEFINE_int32(T, 100, "end time");
 DEFINE_int32(R, 10, "repeat");
 DEFINE_double(q, .001, "decaying rate");
+DEFINE_double(lambda, .5, "lambda");
 DEFINE_bool(save, true, "save results or not");
-DEFINE_bool(objbin, true, "is objective file in binary format");
 
 int main(int argc, char* argv[]) {
     gflags::SetUsageMessage("usage:");
     gflags::ParseCommandLineFlags(&argc, &argv, true);
     osutils::Timer tm;
 
-    CoverageObjFun obj(osutils::join(FLAGS_dir, FLAGS_obj), FLAGS_objbin);
+    FeatureData dat;
+    auto feature_fnm = osutils::join(FLAGS_dir, FLAGS_feature);
+    ioutils::TSVParser ss_cache(feature_fnm);
+    while (ss_cache.next()) {
+        int id = ss_cache.get<int>(0);
+        FeatureVector v;
+        for (int i = 0; i < FEATURE_DIM; ++i)
+            v(i) = ss_cache.get<double>(i + 1);
+        dat[id] = v;
+        if (ss_cache.getLineNO() > FLAGS_T) break;
+    }
+    ActiveSetObjFun obj(FLAGS_lambda, &dat);
+
     EvalStream eval(FLAGS_L);
     Candidate chosen;
     rngutils::default_rng rng;
@@ -49,7 +60,7 @@ int main(int argc, char* argv[]) {
 
     printf("\t%-12s%-12s%-12s\n", "time", "value", "|V|");
 
-    ioutils::TSVParser ss(osutils::join(FLAGS_dir, FLAGS_stream));
+    ioutils::TSVParser ss(feature_fnm);
     while (t++ < FLAGS_T && ss.next()) {
         int e = ss.get<int>(0);
         lifespans.clear();
@@ -70,8 +81,8 @@ int main(int argc, char* argv[]) {
             if (pop.size() > FLAGS_B) {
                 std::vector<int> elements;
                 for (auto& pr : pop) elements.push_back(pr.first);
-                auto samples = rngutils::choice(elements, FLAGS_B, rng);
-                for (int s : samples) chosen.insert(s, pop[s]);
+                for (int s : rngutils::choice(elements, FLAGS_B, rng))
+                    chosen.insert(s, pop[s]);
             } else {
                 for (auto& pr : pop) chosen.insert(pr.first, pr.second);
             }
@@ -85,9 +96,10 @@ int main(int argc, char* argv[]) {
         }
         avg_val /= FLAGS_R;
 
+        eval.next();
+
         rst.emplace_back(t, avg_val);
 
-        eval.next();
         printf("\t%-12d%-12.2f%-12lu\r", t, avg_val, pop.size());
         fflush(stdout);
     }

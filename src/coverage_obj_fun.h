@@ -22,8 +22,7 @@ private:
 public:
     // "input_file" should contain two columns in the form {(user, venue)}. Then
     // a map {user -> venue_vector} will be constructed.
-    CoverageObjFun(const std::string& input_file, const bool isBinary = false)
-        : ObjFun() {
+    CoverageObjFun(const std::string& input_file, const bool isBinary = false) {
         if (isBinary) {
             load(input_file);
         } else {
@@ -64,16 +63,7 @@ public:
         return getVal(S.begin(), S.end());
     }
 
-    double getVal(const std::unordered_set<int>& S) const override {
-        return getVal(S.begin(), S.end());
-    }
-
     double getGain(const int u, const std::vector<int>& S) const override {
-        return getGain(u, S.begin(), S.end());
-    }
-
-    double getGain(const int u,
-                   const std::unordered_set<int>& S) const override {
         return getGain(u, S.begin(), S.end());
     }
 

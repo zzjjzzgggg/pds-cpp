@@ -8,25 +8,31 @@
 # target_compile_definitions(exam_sieve_adn_dg PRIVATE DGRAPH=1)
 
 
-####################################################################################
+#################################################################################
 ##### library
-####################################################################################
+#################################################################################
 add_library(mc_sieve_streaming mc_sieve_streaming.cpp)
 target_link_libraries(mc_sieve_streaming ${LIBRARIES})
 
 add_library(hist_approx hist_approx.cpp)
 target_link_libraries(hist_approx mc_sieve_streaming ${LIBRARIES})
 
-####################################################################################
+#################################################################################
 ##### execute
-####################################################################################
-set(EXE test-me)
+#################################################################################
+set(EXE test-me-5)
+add_executable(${EXE} test-me.cpp)
+target_link_libraries(${EXE} ${LIBRARIES})
+target_compile_definitions(${EXE} PRIVATE FEATURE_DIM=5)
+
+set(EXE test-me-6)
+add_executable(${EXE} test-me.cpp)
+target_link_libraries(${EXE} ${LIBRARIES})
+target_compile_definitions(${EXE} PRIVATE FEATURE_DIM=6)
+
+set(EXE exam_obj_fun)
 add_executable(${EXE} ${EXE}.cpp)
 target_link_libraries(${EXE} ${LIBRARIES})
-
-# set(EXE exam_obj)
-# add_executable(${EXE} ${EXE}.cpp)
-# target_link_libraries(${EXE} ${LIBRARIES})
 
 set(EXE convert_to_bin)
 add_executable(${EXE} ${EXE}.cpp)
@@ -71,3 +77,38 @@ target_link_libraries(${EXE} ${LIBRARIES})
 set(EXE exam_reservoir_sampling)
 add_executable(${EXE} ${EXE}.cpp)
 target_link_libraries(${EXE} ${LIBRARIES})
+
+set(EXE exam_rs)
+add_executable(${EXE} ${EXE}.cpp)
+target_link_libraries(${EXE} ${LIBRARIES})
+
+
+set(EXE exam_greedy_taxi)
+add_executable(${EXE} exam_greedy_active_set.cpp)
+target_link_libraries(${EXE} ${LIBRARIES})
+target_compile_definitions(${EXE} PRIVATE FEATURE_DIM=6)
+
+set(EXE exam_greedy_click)
+add_executable(${EXE} exam_greedy_active_set.cpp)
+target_link_libraries(${EXE} ${LIBRARIES})
+target_compile_definitions(${EXE} PRIVATE FEATURE_DIM=5)
+
+set(EXE exam_hist_approx_taxi)
+add_executable(${EXE} exam_hist_approx_active_set.cpp)
+target_link_libraries(${EXE} hist_approx ${LIBRARIES})
+target_compile_definitions(${EXE} PRIVATE FEATURE_DIM=6)
+
+set(EXE exam_hist_approx_click)
+add_executable(${EXE} exam_hist_approx_active_set.cpp)
+target_link_libraries(${EXE} hist_approx ${LIBRARIES})
+target_compile_definitions(${EXE} PRIVATE FEATURE_DIM=5)
+
+set(EXE exam_random_taxi)
+add_executable(${EXE} exam_random_active_set.cpp)
+target_link_libraries(${EXE} ${LIBRARIES})
+target_compile_definitions(${EXE} PRIVATE FEATURE_DIM=6)
+
+set(EXE exam_random_click)
+add_executable(${EXE} exam_random_active_set.cpp)
+target_link_libraries(${EXE} ${LIBRARIES})
+target_compile_definitions(${EXE} PRIVATE FEATURE_DIM=5)

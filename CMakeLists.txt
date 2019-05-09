@@ -21,6 +21,9 @@ find_package(Threads REQUIRED)
 find_package(gflags REQUIRED)
 find_package(CPPLIB REQUIRED)
 
+# eigen3
+include_directories($ENV{EIGEN_INCLUDE_DIR})
+
 add_definitions(${CPPLIB_DEFINITIONS})
 include_directories(${CPPLIB_INCLUDE_DIRS})
 

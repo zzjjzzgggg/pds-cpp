@@ -9,11 +9,12 @@
 #include "stdafx.h"
 
 class BiasedReservoir {
-public:
+private:
     int capacity_;
     double lambda_, pin_;
-
     rngutils::default_rng rng_;
+
+public:
     std::vector<int> reservoir_;
 
 public:
@@ -40,8 +41,17 @@ public:
     }
 
     void echo() {
-        std::sort(reservoir_.begin(), reservoir_.end());
+        sort();
         ioutils::printVec(reservoir_);
+    }
+
+    void sort() { std::sort(reservoir_.begin(), reservoir_.end()); }
+
+    void shuffle() { rng_.shuffle(reservoir_.begin(), reservoir_.end()); }
+
+    void save(const std::string& fnm) {
+        sort();
+        ioutils::saveVec(reservoir_, fnm);
     }
 
 }; /* BiasedReservoir */
