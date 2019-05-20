@@ -16,7 +16,7 @@ DEFINE_string(dir, "", "working directory");
 DEFINE_string(stream, "stream.gz", "input streaming data file name");
 DEFINE_string(lifespans, "", "lifespans file name full path");
 DEFINE_string(obj, "obj_bin.gz", "objective file name");
-DEFINE_int32(L, 10, "maximum lifetime");
+DEFINE_int32(L, 5000, "maximum lifetime");
 DEFINE_int32(n, 10, "number of samples");
 DEFINE_int32(B, 10, "budget");
 DEFINE_int32(T, 100, "end time");
