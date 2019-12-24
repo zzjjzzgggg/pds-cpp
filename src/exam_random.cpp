@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
     Candidate chosen;
     rngutils::default_rng rng;
 
-    // If lifespan file name is not empty and exists on disk, then read
+    // If lifespan file name is not empty and the file exists, then read
     // lifespans from file; Otherwise, generate random lifespans.
     LifespanGenerator lifegen(FLAGS_L, FLAGS_q);
     auto pin = ioutils::getIOIn(FLAGS_lifespans);
@@ -61,33 +61,29 @@ int main(int argc, char* argv[]) {
 
         eval.add(e, segs);
         auto pop = eval.getPop();
+        eval.next();
 
         double avg_val = 0;
         for (int rpt = 0; rpt < FLAGS_R; ++rpt) {
             chosen.clear();
             chosen.init(FLAGS_n);
 
+            // randomly choose B elements from population
             if (pop.size() > FLAGS_B) {
                 std::vector<int> elements;
                 for (auto& pr : pop) elements.push_back(pr.first);
-                auto samples = rngutils::choice(elements, FLAGS_B, rng);
+                auto samples = rngutils::choose(elements, FLAGS_B, rng);
                 for (int s : samples) chosen.insert(s, pop[s]);
             } else {
                 for (auto& pr : pop) chosen.insert(pr.first, pr.second);
             }
 
-            double val = 0;
-            for (int i = 0; i < FLAGS_n; ++i)
-                val += obj.getVal(chosen.S_vec_[i]);
-            val /= FLAGS_n;
-
-            avg_val += val;
+            avg_val += chosen.value(obj);
         }
         avg_val /= FLAGS_R;
 
         rst.emplace_back(t, avg_val);
 
-        eval.next();
         printf("\t%-12d%-12.2f%-12lu\r", t, avg_val, pop.size());
         fflush(stdout);
     }

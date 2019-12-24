@@ -14,9 +14,7 @@ int main(int argc, char* argv[]) {
     std::map<int, int> hist;
     for (int k = 0; k < R; ++k) {
         BiasedReservoir sampler(10, 1e-1);
-        for (int e = 0; e < N; ++e) {
-            sampler.process(e);
-        }
+        for (int e = 0; e < N; ++e) sampler.process(e);
         for (int s : sampler.reservoir_) ++hist[s / (N / 10)];
     }
 

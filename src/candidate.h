@@ -7,6 +7,7 @@
 #define __CANDIDATE_H__
 
 #include "stdafx.h"
+#include "obj_fun.h"
 
 /**
  * The candidate items corresponding to a threshold.
@@ -48,6 +49,12 @@ public:
             printf("S[%d]: ", i++);
             ioutils::printVec(vec);
         }
+    }
+
+    double value(const ObjFun& obj) const {
+        double val = 0;
+        for (auto& vec : S_vec_) val += obj.getVal(vec);
+        return val / S_vec_.size();
     }
 
 }; /* Candidate */

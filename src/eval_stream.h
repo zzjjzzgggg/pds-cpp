@@ -28,6 +28,9 @@ public:
         cur_ = (cur_ + 1) % L_;
     }
 
+    /**
+     * Get current Bernoulli sets
+     */
     std::unordered_map<int, BernoulliSet> getPop() const {
         std::unordered_map<int, BernoulliSet> pop;
         for (auto& pr : buf_[cur_]) pop[pr.first] = std::move(pr.second);

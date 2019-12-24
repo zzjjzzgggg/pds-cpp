@@ -11,7 +11,7 @@
 /**
  * A Bernoulli segment.
  * Bernoulli sets belonging to the same segment are the same.
- * That is, I_l(e) for l in [start, end) are same.
+ * That is, I_l(e), start <= l < end, are the same.
  */
 class BernoulliSegment {
 public:

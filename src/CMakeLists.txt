@@ -82,7 +82,6 @@ set(EXE exam_rs)
 add_executable(${EXE} ${EXE}.cpp)
 target_link_libraries(${EXE} ${LIBRARIES})
 
-
 set(EXE exam_greedy_taxi)
 add_executable(${EXE} exam_greedy_active_set.cpp)
 target_link_libraries(${EXE} ${LIBRARIES})
