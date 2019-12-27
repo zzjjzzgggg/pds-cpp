@@ -37,13 +37,6 @@ private:
         return candidate_buf_[thi_pos_.at(i)];
     }
 
-    // Calculate the gain of item e w.r.t. a candidate.
-    double getGain(const int e, const BernoulliSet& bs,
-                   const Candidate& ca) const;
-
-    // Calculate the utility value of a candidate.
-    double getVal(const Candidate& ca) const;
-
     // Add a new threshold indexed by i.
     void addTheta(const int i);
     void delTheta(const int i);

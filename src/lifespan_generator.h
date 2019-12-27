@@ -40,17 +40,6 @@ public:
         vec.reserve(n);
         for (int i = 0; i < n; ++i) vec.push_back(get());
     }
-
-    /**
-     * Return a vector of <trial_id, lifespan> pairs.
-     */
-    // std::vector<std::pair<int, int>> getTrialLifespanPairs(const int n) const
-    // {
-    //     std::vector<std::pair<int, int>> vec;
-    //     vec.reserve(n);
-    //     for (int i = 0; i < n; ++i) vec.emplace_back(i, get());
-    //     return vec;
-    // }
 };
 
 #endif /* __LIFESPAN_GEN_H__ */

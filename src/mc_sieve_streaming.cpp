@@ -12,10 +12,9 @@ void MCSieveStreaming::addTheta(const int i) {
         recycle_.pop_back();
     } else {  // otherwise realloc room
         pos = candidate_buf_.size();
-        candidate_buf_.emplace_back();
+        candidate_buf_.emplace_back(num_samples_);
     }
     thi_pos_[i] = pos;
-    candidate_buf_[pos].init(num_samples_);  // must be initialized before using
 }
 
 void MCSieveStreaming::delTheta(const int i) {
@@ -43,20 +42,6 @@ void MCSieveStreaming::updateThresholds() {
     for (int i = li; i <= new_ui; i++) addTheta(i);
 }
 
-double MCSieveStreaming::getGain(const int e, const BernoulliSet& bs,
-                                 const Candidate& ca) const {
-    ++cost_;
-    double gain = 0;
-    for (int trial : bs) gain += obj_ptr_->getGain(e, ca.S_vec_[trial]);
-    return gain / num_samples_;
-}
-
-double MCSieveStreaming::getVal(const Candidate& ca) const {
-    double val = 0;
-    for (auto& vec : ca.S_vec_) val += obj_ptr_->getVal(vec);
-    return val / num_samples_;
-}
-
 void MCSieveStreaming::feed(const int e, const BernoulliSet& bs) {
     // update maximum gain and thresholds
     double val = obj_ptr_->getVal(e) * bs.size() / num_samples_;
@@ -69,8 +54,9 @@ void MCSieveStreaming::feed(const int e, const BernoulliSet& bs) {
         int i = pr.first;
         auto& ca = getCandidate(i);
         if (!ca.isMember(e) && ca.size() < budget_) {
-            double threshold = getThreshold(i), gain = getGain(e, bs, ca);
+            double threshold = getThreshold(i), gain = ca.gain(e, bs, obj_ptr_);
             if (gain >= threshold) ca.insert(e, bs);
+            ++cost_;
         }
     }
 }
@@ -80,7 +66,7 @@ std::pair<int, double> MCSieveStreaming::getResult() const {
     double rwd_mx = 0;
     for (auto& pr : thi_pos_) {
         int i = pr.first;
-        double rwd = getVal(getCandidate(i));
+        double rwd = getCandidate(i).value(obj_ptr_);
         if (rwd > rwd_mx) {
             rwd_mx = rwd;
             i_mx = i;

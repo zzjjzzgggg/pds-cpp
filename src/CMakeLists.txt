@@ -38,7 +38,7 @@ set(EXE convert_to_bin)
 add_executable(${EXE} ${EXE}.cpp)
 target_link_libraries(${EXE} ${LIBRARIES})
 
-set(EXE exam_stream)
+set(EXE exam_genlifespans)
 add_executable(${EXE} ${EXE}.cpp)
 target_link_libraries(${EXE} ${LIBRARIES})
 
@@ -111,3 +111,7 @@ set(EXE exam_random_click)
 add_executable(${EXE} exam_random_active_set.cpp)
 target_link_libraries(${EXE} ${LIBRARIES})
 target_compile_definitions(${EXE} PRIVATE FEATURE_DIM=5)
+
+set(EXE exam_window_size)
+add_executable(${EXE} ${EXE}.cpp)
+target_link_libraries(${EXE} ${LIBRARIES})

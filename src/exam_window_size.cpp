@@ -1,31 +1,33 @@
 /**
- * Copyright (C) by J.Z. 2018-08-25 10:20
+ * Copyright (C) by J.Z. 2019-12-27 08:51
  * Distributed under terms of the MIT license.
  */
 
+#include "stdafx.h"
 #include "coverage_obj_fun.h"
-#include "lifespan_generator.h"
+#include "simple_greedy.h"
 #include "bernoulli_segment.h"
-
 #include "eval_stream.h"
-#include "greedy_alg.h"
+#include "candidate.h"
 
 #include <gflags/gflags.h>
 
 DEFINE_string(dir, "", "working directory");
 DEFINE_string(stream, "stream.gz", "input streaming data file name");
-DEFINE_string(lifespans, "../lifespans/q{:g}n{}L{}.gz", "lifespans template");
 DEFINE_string(obj, "obj_bin.gz", "objective file name");
+DEFINE_string(lifespans, "../lifespans/q{:g}n{}L{}.gz", "lifespans template");
+DEFINE_int32(B, 10, "budget");
+DEFINE_int32(W, 100, "window size");
+DEFINE_int32(step, 100, "window size step");
+DEFINE_int32(T, 2000, "end time");
 DEFINE_int32(L, 5000, "maximum lifetime");
 DEFINE_int32(n, 50, "number of samples");
-DEFINE_int32(B, 10, "budget");
-DEFINE_int32(T, 2000, "end time");
 DEFINE_double(q, .001, "decaying rate");
 DEFINE_bool(save, true, "save results or not");
 DEFINE_bool(objbin, true, "is objective file in binary format");
 
 int main(int argc, char *argv[]) {
-    gflags::SetUsageMessage("usage:");
+    gflags::SetUsageMessage("usage");
     gflags::ParseCommandLineFlags(&argc, &argv, true);
     osutils::Timer tm;
 
@@ -35,43 +37,45 @@ int main(int argc, char *argv[]) {
     auto pin = ioutils::getIOIn(lifespan_fnm);
 
     CoverageObjFun obj(osutils::join(FLAGS_dir, FLAGS_obj), FLAGS_objbin);
-    GreedyAlg greedy(FLAGS_n, FLAGS_B, &obj);
     EvalStream eval(FLAGS_L);
 
     int t = 0;
-    std::vector<int> lifespans;
-    std::vector<std::tuple<int, double, int>> rst;
-
-    printf("\t%-12s%-12s%-12s%-12s\n", "time", "value", "#cost", "|V|");
-
+    std::vector<int> lifespans, elements;
     ioutils::TSVParser ss(osutils::join(FLAGS_dir, FLAGS_stream));
     while (t++ < FLAGS_T && ss.next()) {
         int e = ss.get<int>(0);
         lifespans.clear();
         pin->load(lifespans);
         BernoulliSegments segs(lifespans);
-
-        eval.add(e, segs);
-
-        auto pop = eval.getPop();
-        double val = greedy.run(pop);
-        int cost = greedy.getCost();
-        rst.emplace_back(t, val, cost);
-
-        printf("\t%-12d%-12.2f%-12d%-12lu\r", t, val, cost, pop.size());
-
         eval.next();
-        fflush(stdout);
+        eval.add(e, segs);
+        elements.push_back(e);
     }
-    printf("\n");
+    auto ele_bs = eval.getPop();
+
+    std::vector<std::pair<int, double>> result;
+    for (int w = FLAGS_W; w <= FLAGS_T; w += FLAGS_step) {
+        std::vector<int> eles(elements.begin() + FLAGS_T - w, elements.end());
+
+        SimpleGreedy greedy(FLAGS_B, &obj);
+        greedy.run(eles);
+        Candidate candidate(FLAGS_n);
+        for (int e : greedy.chosen_) {
+            if (ele_bs.find(e) != ele_bs.end()) {
+                candidate.insert(e, ele_bs[e]);
+            }
+        }
+        double val = candidate.value(&obj);
+        result.emplace_back(w, val);
+        printf("%d\t%.2f\n", w, val);
+    }
 
     if (FLAGS_save) {
-        // save results
         std::string ofnm = osutils::join(
             FLAGS_dir,
-            "greedy_pds_q{:g}n{}K{}T{}.dat"_format(
+            "window_size_q{:g}n{}K{}T{}.dat"_format(
                 FLAGS_q, FLAGS_n, FLAGS_B, strutils::prettyNumber(FLAGS_T)));
-        ioutils::saveTupleVec(rst, ofnm, "{}\t{:.4f}\t{}\n");
+        ioutils::savePrVec(result, ofnm, "{}\t{:.4f}\n");
     }
 
     printf("cost time %s\n", tm.getStr().c_str());

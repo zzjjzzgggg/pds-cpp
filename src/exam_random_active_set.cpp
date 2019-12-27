@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
     ActiveSetObjFun obj(FLAGS_lambda, &dat);
 
     EvalStream eval(FLAGS_L);
-    Candidate chosen;
+    Candidate chosen(FLAGS_n);
     rngutils::default_rng rng;
 
     // If lifespan file name is not empty and exists on disk, then read
@@ -76,12 +76,11 @@ int main(int argc, char* argv[]) {
         double avg_val = 0;
         for (int rpt = 0; rpt < FLAGS_R; ++rpt) {
             chosen.clear();
-            chosen.init(FLAGS_n);
 
             if (pop.size() > FLAGS_B) {
                 std::vector<int> elements;
                 for (auto& pr : pop) elements.push_back(pr.first);
-                for (int s : rngutils::choice(elements, FLAGS_B, rng))
+                for (int s : rngutils::choose(elements, FLAGS_B, rng))
                     chosen.insert(s, pop[s]);
             } else {
                 for (auto& pr : pop) chosen.insert(pr.first, pr.second);

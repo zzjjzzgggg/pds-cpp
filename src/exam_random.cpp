@@ -3,10 +3,10 @@
  * Distributed under terms of the MIT license.
  */
 
+#include "candidate.h"
 #include "coverage_obj_fun.h"
 #include "lifespan_generator.h"
 #include "bernoulli_segment.h"
-#include "candidate.h"
 #include "eval_stream.h"
 
 #include <gflags/gflags.h>
@@ -23,7 +23,6 @@ DEFINE_int32(R, 10, "repeat");
 DEFINE_double(q, .001, "decaying rate");
 DEFINE_bool(save, true, "save results or not");
 DEFINE_bool(objbin, true, "is objective file in binary format");
-
 int main(int argc, char* argv[]) {
     gflags::SetUsageMessage("usage:");
     gflags::ParseCommandLineFlags(&argc, &argv, true);
@@ -31,7 +30,7 @@ int main(int argc, char* argv[]) {
 
     CoverageObjFun obj(osutils::join(FLAGS_dir, FLAGS_obj), FLAGS_objbin);
     EvalStream eval(FLAGS_L);
-    Candidate chosen;
+    Candidate chosen(FLAGS_n);
     rngutils::default_rng rng;
 
     // If lifespan file name is not empty and the file exists, then read
@@ -66,7 +65,6 @@ int main(int argc, char* argv[]) {
         double avg_val = 0;
         for (int rpt = 0; rpt < FLAGS_R; ++rpt) {
             chosen.clear();
-            chosen.init(FLAGS_n);
 
             // randomly choose B elements from population
             if (pop.size() > FLAGS_B) {
@@ -78,7 +76,7 @@ int main(int argc, char* argv[]) {
                 for (auto& pr : pop) chosen.insert(pr.first, pr.second);
             }
 
-            avg_val += chosen.value(obj);
+            avg_val += chosen.value(&obj);
         }
         avg_val /= FLAGS_R;
 

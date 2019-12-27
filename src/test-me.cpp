@@ -39,8 +39,7 @@ void test_segments() {
 }
 
 void test_candidate_copy() {
-    Candidate c1;
-    c1.init(10);
+    Candidate c1(10);
     c1.insert(1, {1, 3, 5});
     c1.insert(2, {0, 2, 3});
     printf("\nc1:\n");

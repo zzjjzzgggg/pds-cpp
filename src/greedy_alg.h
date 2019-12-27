@@ -6,7 +6,6 @@
 #ifndef __GREEDY_ALG_H__
 #define __GREEDY_ALG_H__
 
-#include "obj_fun.h"
 #include "candidate.h"
 
 class GreedyAlg {
@@ -39,16 +38,16 @@ private:
 
 public:
     GreedyAlg(const int num_samples, const int budget, const ObjFun* obj)
-        : num_samples_(num_samples), budget_(budget), obj_ptr_(obj) {}
+        : num_samples_(num_samples), budget_(budget), obj_ptr_(obj) {
+        chosen_.init(num_samples);
+    }
 
     /**
      * Greedy on a population, where population = {e -> I(e): e\in V}.
      * Return final reward.
      */
     double run(const std::unordered_map<int, BernoulliSet>& population) {
-        // clear and re-initialize chosen_
         chosen_.clear();
-        chosen_.init(num_samples_);
 
         // initialize the priority queue
         auto cmp = [](Elem& a, Elem& b) { return a.gain < b.gain; };
