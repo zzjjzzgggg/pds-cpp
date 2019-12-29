@@ -4,7 +4,6 @@
  */
 
 #include "active_set_obj_fun.h"
-#include "lifespan_generator.h"
 #include "bernoulli_segment.h"
 #include "candidate.h"
 #include "eval_stream.h"
@@ -45,15 +44,7 @@ int main(int argc, char* argv[]) {
     Candidate chosen(FLAGS_n);
     rngutils::default_rng rng;
 
-    // If lifespan file name is not empty and exists on disk, then read
-    // lifespans from file; Otherwise, generate random lifespans.
-    LifespanGenerator lifegen(FLAGS_L, FLAGS_q);
     auto pin = ioutils::getIOIn(FLAGS_lifespans);
-    if (pin)
-        printf("will read lifespans from file.\n");
-    else
-        printf("will generate random lifespans.\n");
-
     int t = 0;
     std::vector<int> lifespans;
     std::vector<std::pair<int, double>> rst;
@@ -64,10 +55,7 @@ int main(int argc, char* argv[]) {
     while (t++ < FLAGS_T && ss.next()) {
         int e = ss.get<int>(0);
         lifespans.clear();
-        if (pin)
-            pin->load(lifespans);
-        else
-            lifegen.getLifespans(FLAGS_n, lifespans);
+        pin->load(lifespans);
         BernoulliSegments segs(lifespans);
 
         eval.add(e, segs);
@@ -86,12 +74,7 @@ int main(int argc, char* argv[]) {
                 for (auto& pr : pop) chosen.insert(pr.first, pr.second);
             }
 
-            double val = 0;
-            for (int i = 0; i < FLAGS_n; ++i)
-                val += obj.getVal(chosen.S_vec_[i]);
-            val /= FLAGS_n;
-
-            avg_val += val;
+            avg_val += chosen.value(&obj);
         }
         avg_val /= FLAGS_R;
 

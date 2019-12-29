@@ -8,6 +8,9 @@
 
 #include "stdafx.h"
 
+/**
+ * Using the Variable Reservoir Sampling technique in [Aggarwal'06]
+ */
 class BiasedReservoir {
 private:
     int capacity_;
@@ -28,7 +31,8 @@ public:
         if (rng_.uniform() > pin_) return;
 
         int num = reservoir_.size();
-        if (rng_.uniform() < num * lambda_ / pin_) {  // num / capacity_mx
+        // F(t) = num / fictitious_capacity = num * lambda / pin
+        if (rng_.uniform() < num * lambda_ / pin_) {
             reservoir_[rng_.randint(0, num - 1)] = e;
         } else {  // if reservoir is full, delete one sample, and reduce pin
             if (num == capacity_) {
@@ -38,20 +42,6 @@ public:
             }
             reservoir_.push_back(e);
         }
-    }
-
-    void echo() {
-        sort();
-        ioutils::printVec(reservoir_);
-    }
-
-    void sort() { std::sort(reservoir_.begin(), reservoir_.end()); }
-
-    void shuffle() { rng_.shuffle(reservoir_.begin(), reservoir_.end()); }
-
-    void save(const std::string& fnm) {
-        sort();
-        ioutils::saveVec(reservoir_, fnm);
     }
 
 }; /* BiasedReservoir */

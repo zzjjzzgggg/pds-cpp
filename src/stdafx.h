@@ -24,4 +24,4 @@ using namespace fmt::literals;
 using BernoulliSet = std::vector<int>;
 
 // NYC-taxi: 6, Yahoo-click: 5
-// #define FEATURE_DIM 6
+// #define FEATURE_DIM 1

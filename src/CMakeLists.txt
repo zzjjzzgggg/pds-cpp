@@ -74,14 +74,6 @@ set(EXE exam_random)
 add_executable(${EXE} ${EXE}.cpp)
 target_link_libraries(${EXE} ${LIBRARIES})
 
-set(EXE exam_reservoir_sampling)
-add_executable(${EXE} ${EXE}.cpp)
-target_link_libraries(${EXE} ${LIBRARIES})
-
-set(EXE exam_rs)
-add_executable(${EXE} ${EXE}.cpp)
-target_link_libraries(${EXE} ${LIBRARIES})
-
 set(EXE exam_greedy_taxi)
 add_executable(${EXE} exam_greedy_active_set.cpp)
 target_link_libraries(${EXE} ${LIBRARIES})
@@ -115,3 +107,21 @@ target_compile_definitions(${EXE} PRIVATE FEATURE_DIM=5)
 set(EXE exam_window_size)
 add_executable(${EXE} ${EXE}.cpp)
 target_link_libraries(${EXE} ${LIBRARIES})
+
+set(EXE exam_test_reservoir_sampling)
+add_executable(${EXE} ${EXE}.cpp)
+target_link_libraries(${EXE} ${LIBRARIES})
+
+set(EXE exam_reservoir_sampling)
+add_executable(${EXE} ${EXE}.cpp)
+target_link_libraries(${EXE} ${LIBRARIES})
+
+set(EXE exam_rs_taxi)
+add_executable(${EXE} exam_reservoir_sampling_active_set.cpp)
+target_link_libraries(${EXE} ${LIBRARIES})
+target_compile_definitions(${EXE} PRIVATE FEATURE_DIM=6)
+
+set(EXE exam_rs_click)
+add_executable(${EXE} exam_reservoir_sampling_active_set.cpp)
+target_link_libraries(${EXE} ${LIBRARIES})
+target_compile_definitions(${EXE} PRIVATE FEATURE_DIM=5)

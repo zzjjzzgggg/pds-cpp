@@ -48,8 +48,7 @@ int main(int argc, char *argv[]) {
     printf("\t%-12s%-12s%-12s%-12s\n", "time", "value", "#calls", "#algs");
 
     ioutils::TSVParser ss(osutils::join(FLAGS_dir, FLAGS_stream));
-    while (ss.next()) {
-        ++t;
+    while (t++ < FLAGS_T && ss.next()) {
         int e = ss.get<int>(0);
         lifespans.clear();
         if (pin)
@@ -70,16 +69,14 @@ int main(int argc, char *argv[]) {
 
         printf("\t%-12d%-12.2f%-12d%-12d\r", t, val, cost, num_algs);
         fflush(stdout);
-
-        if (t == FLAGS_T) break;
     }
     printf("\n");
 
     // save results
     if (FLAGS_save) {
         std::string ofnm = osutils::join(
-            FLAGS_dir, "HistApprox_n{}K{}q{:g}e{:g}T{}.dat"_format(
-                           FLAGS_n, FLAGS_B, FLAGS_q, FLAGS_eps,
+            FLAGS_dir, "HistApprox_q{:g}n{}K{}e{:g}T{}.dat"_format(
+                           FLAGS_q, FLAGS_n, FLAGS_B, FLAGS_eps,
                            strutils::prettyNumber(FLAGS_T)));
         ioutils::saveTupleVec(rst, ofnm, "{}\t{:.4f}\t{}\t{}\n");
     }

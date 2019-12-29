@@ -58,9 +58,9 @@ int main(int argc, char *argv[]) {
         int cost = greedy.getCost();
         rst.emplace_back(t, val, cost);
 
-        printf("\t%-12d%-12.2f%-12d%-12lu\r", t, val, cost, pop.size());
-
         eval.next();
+
+        printf("\t%-12d%-12.2f%-12d%-12lu\r", t, val, cost, pop.size());
         fflush(stdout);
     }
     printf("\n");
