@@ -9,10 +9,10 @@
 #include <gflags/gflags.h>
 
 DEFINE_string(dir, "../../lifespans", "working directory");
-DEFINE_int32(n, 10, "number of samples");
+DEFINE_int32(n, 50, "number of samples");
 DEFINE_int32(L, 5000, "maximum lifetime");
 DEFINE_int32(T, 10000, "stream end time");
-DEFINE_double(q, .001, "decaying rate");
+DEFINE_double(lmd, .01, "decaying rate");
 DEFINE_bool(echo, false, "echo");
 
 int main(int argc, char* argv[]) {
@@ -20,11 +20,11 @@ int main(int argc, char* argv[]) {
     gflags::ParseCommandLineFlags(&argc, &argv, true);
     osutils::Timer tm;
 
-    LifespanGenerator lifegen(FLAGS_L, FLAGS_q);
+    LifespanGenerator lifegen(FLAGS_L, 1 - exp(-FLAGS_lmd));
 
     auto filename = osutils::join(
-        FLAGS_dir, "q{:g}n{}L{}.gz"_format(FLAGS_q, FLAGS_n,
-                                           strutils::prettyNumber(FLAGS_L)));
+        FLAGS_dir, "lmd{:g}n{}L{}.gz"_format(FLAGS_lmd, FLAGS_n,
+                                             strutils::prettyNumber(FLAGS_L)));
     auto pout = ioutils::getIOOut(filename);
     int t = 0;
     while (t++ < FLAGS_T) {

@@ -23,6 +23,7 @@ public:
 
     /**
      * Return a sampled lifespan.
+     * Geo(i;q) = q(1-q)^i, i = 0,1,2,...
      */
     int get() const { return std::min(rng_.geometric(q_) + 1, L_); }
 

@@ -4,7 +4,6 @@
  */
 
 #include "coverage_obj_fun.h"
-#include "lifespan_generator.h"
 #include "bernoulli_segment.h"
 
 #include "eval_stream.h"
@@ -14,14 +13,13 @@
 
 DEFINE_string(dir, "", "working directory");
 DEFINE_string(stream, "stream.gz", "input streaming data file name");
-DEFINE_string(lifespans, "../lifespans/q{:g}n{}L{}.gz", "lifespans template");
+DEFINE_string(lifespans, "../lifespans/lmd{:g}n{}L{}.gz", "lifespans template");
 DEFINE_string(obj, "obj_bin.gz", "objective file name");
 DEFINE_int32(L, 5000, "maximum lifetime");
 DEFINE_int32(n, 50, "number of samples");
 DEFINE_int32(B, 10, "budget");
 DEFINE_int32(T, 2000, "end time");
-DEFINE_double(q, .001, "decaying rate");
-DEFINE_bool(save, true, "save results or not");
+DEFINE_double(lmd, .01, "decaying rate");
 DEFINE_bool(objbin, true, "is objective file in binary format");
 
 int main(int argc, char *argv[]) {
@@ -29,9 +27,9 @@ int main(int argc, char *argv[]) {
     gflags::ParseCommandLineFlags(&argc, &argv, true);
     osutils::Timer tm;
 
-    std::string lifespan_fnm =
-        osutils::join(FLAGS_dir, fmt::format(FLAGS_lifespans, FLAGS_q, FLAGS_n,
-                                             strutils::prettyNumber(FLAGS_L)));
+    std::string lifespan_fnm = osutils::join(
+        FLAGS_dir, fmt::format(FLAGS_lifespans, FLAGS_lmd, FLAGS_n,
+                               strutils::prettyNumber(FLAGS_L)));
     auto pin = ioutils::getIOIn(lifespan_fnm);
 
     CoverageObjFun obj(osutils::join(FLAGS_dir, FLAGS_obj), FLAGS_objbin);
@@ -65,14 +63,12 @@ int main(int argc, char *argv[]) {
     }
     printf("\n");
 
-    if (FLAGS_save) {
-        // save results
-        std::string ofnm = osutils::join(
-            FLAGS_dir,
-            "greedy_pds_q{:g}n{}K{}T{}.dat"_format(
-                FLAGS_q, FLAGS_n, FLAGS_B, strutils::prettyNumber(FLAGS_T)));
-        ioutils::saveTupleVec(rst, ofnm, "{}\t{:.4f}\t{}\n");
-    }
+    // save results
+    std::string ofnm = osutils::join(
+        FLAGS_dir,
+        "greedy_lmd{:g}n{}K{}T{}.dat"_format(FLAGS_lmd, FLAGS_n, FLAGS_B,
+                                             strutils::prettyNumber(FLAGS_T)));
+    ioutils::saveTupleVec(rst, ofnm, "{}\t{:.4f}\t{}\n");
 
     printf("cost time %s\n", tm.getStr().c_str());
     gflags::ShutDownCommandLineFlags();

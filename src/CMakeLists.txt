@@ -54,11 +54,11 @@ set(EXE exam_greedy_and_mc_sieve_streaming)
 add_executable(${EXE} ${EXE}.cpp)
 target_link_libraries(${EXE} mc_sieve_streaming ${LIBRARIES})
 
-set(EXE exam_mcssopd)
+set(EXE exam_basic)
 add_executable(${EXE} ${EXE}.cpp)
 target_link_libraries(${EXE} mc_sieve_streaming ${LIBRARIES})
 
-set(EXE exam_greedy_pds)
+set(EXE exam_greedy)
 add_executable(${EXE} ${EXE}.cpp)
 target_link_libraries(${EXE} ${LIBRARIES})
 
@@ -66,7 +66,7 @@ target_link_libraries(${EXE} ${LIBRARIES})
 # add_executable(${EXE} ${EXE}.cpp)
 # target_link_libraries(${EXE} mc_sieve_streaming ${LIBRARIES})
 
-set(EXE exam_hist_approx)
+set(EXE exam_hist)
 add_executable(${EXE} ${EXE}.cpp)
 target_link_libraries(${EXE} hist_approx ${LIBRARIES})
 
