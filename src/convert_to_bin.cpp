@@ -7,25 +7,27 @@
  */
 
 #include "stdafx.h"
-#include "coverage_obj_fun.h"
+// #include "coverage_obj_fun.h"
+#include "tweet_obj_fun.h"
 
 #include <gflags/gflags.h>
 
-DEFINE_string(obj, "", "input obj data (two columns)");
+DEFINE_string(dir, "", "working directory");
 int main(int argc, char *argv[]) {
     gflags::SetUsageMessage("usage:");
     gflags::ParseCommandLineFlags(&argc, &argv, true);
     osutils::Timer tm;
 
-    CoverageObjFun obj(FLAGS_obj);
+    // CoverageObjFun obj(FLAGS_obj);
+    TweetObjFun obj(osutils::join(FLAGS_dir, "obj.gz"));
     printf("load txt cost time %s\n", tm.getStr().c_str());
 
-    auto bin_file =
-        osutils::join(strutils::getBasePath(FLAGS_obj), "obj_bin.gz");
+    auto bin_file = osutils::join(FLAGS_dir, "obj_bin.gz");
     obj.save(bin_file);
 
     tm.tick();
-    CoverageObjFun obj2(bin_file, true);
+    // CoverageObjFun obj2(bin_file, true);
+    TweetObjFun obj2(bin_file, true);
     printf("load bin cost time %s\n", tm.getStr().c_str());
 
     gflags::ShutDownCommandLineFlags();

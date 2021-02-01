@@ -7,7 +7,6 @@
 # target_link_libraries(exam_sieve_adn_dg dyn_dgraph_mgr)
 # target_compile_definitions(exam_sieve_adn_dg PRIVATE DGRAPH=1)
 
-
 #################################################################################
 ##### library
 #################################################################################

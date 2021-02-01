@@ -4,7 +4,8 @@
  */
 
 #include "candidate.h"
-#include "coverage_obj_fun.h"
+// #include "coverage_obj_fun.h"
+#include "tweet_obj_fun.h"
 #include "bernoulli_segment.h"
 #include "eval_stream.h"
 
@@ -26,14 +27,15 @@ int main(int argc, char* argv[]) {
     gflags::ParseCommandLineFlags(&argc, &argv, true);
     osutils::Timer tm;
 
-    CoverageObjFun obj(osutils::join(FLAGS_dir, FLAGS_obj), FLAGS_objbin);
+    // CoverageObjFun obj(osutils::join(FLAGS_dir, FLAGS_obj), FLAGS_objbin);
+    TweetObjFun obj(osutils::join(FLAGS_dir, FLAGS_obj), FLAGS_objbin);
     EvalStream eval(FLAGS_L);
     Candidate chosen(FLAGS_n);
     rngutils::default_rng rng;
 
-    std::string lifespan_fnm = osutils::join(
-        FLAGS_dir, fmt::format(FLAGS_lifespans, FLAGS_lmd, FLAGS_n,
-                               strutils::prettyNumber(FLAGS_L)));
+    std::string lifespan_fnm =
+        osutils::join(FLAGS_dir, fmt::format(FLAGS_lifespans, FLAGS_lmd, FLAGS_n,
+                                             strutils::prettyNumber(FLAGS_L)));
     auto pin = ioutils::getIOIn(lifespan_fnm);
 
     int t = 0;
