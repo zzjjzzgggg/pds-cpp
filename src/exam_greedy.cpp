@@ -72,7 +72,7 @@ int main(int argc, char *argv[]) {
                                              strutils::prettyNumber(FLAGS_T)));
     ioutils::saveTupleVec(rst, ofnm, "{}\t{:.4f}\t{}\n");
 
-    greedy.saveSolution(osutils::join(FLAGS_dir, "greedy.dat"));
+    // greedy.saveSolution(osutils::join(FLAGS_dir, "greedy.dat"));
 
     printf("cost time %s\n", tm.getStr().c_str());
     gflags::ShutDownCommandLineFlags();

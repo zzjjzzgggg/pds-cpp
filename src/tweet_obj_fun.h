@@ -9,7 +9,7 @@
 #include "obj_fun.h"
 
 class TweetObjFun : public ObjFun {
-public:
+private:
     class Tweet {
     public:
         int num_rt_ = 0, num_like_ = 0;
@@ -25,7 +25,11 @@ public:
         int size() const { return words_.size(); }
 
         void add(const int word) { words_.push_back(word); }
-        void sort() { std::sort(words_.begin(), words_.end()); }
+        void defrag() {
+            std::sort(words_.begin(), words_.end());
+            auto last = std::unique(words_.begin(), words_.end());
+            words_.erase(last, words_.end());
+        }
 
         void save(std::unique_ptr<ioutils::IOOut>& po) const {
             po->save(num_rt_);
@@ -54,7 +58,7 @@ public:
                     strutils::split(ss.get<std::string>(4), ',');
                 Tweet tweet(ss.get<int>(2), ss.get<int>(3), words.size());
                 for (auto word : words) tweet.add(std::stoi(word));
-                tweet.sort();
+                tweet.defrag();
                 tweets_.push_back(std::move(tweet));
             }
         }
@@ -79,40 +83,32 @@ public:
 
     // Given a tweet id, return its value
     double getVal(const int tid) const override {
-        if (tid < tweets_.size())
-            return std::log(1 + tweets_[tid].size() * tweets_[tid].val());
-        return 0;
+        return std::sqrt(tweets_[tid].size() * tweets_[tid].val());
     }
 
     double getVal(const std::vector<int>& S) const override {
         std::unordered_map<int, double> word_score;
         for (int tid : S) {
-            if (tid < tweets_.size()) {
-                for (int w : tweets_[tid].words_)
-                    word_score[w] += tweets_[tid].val();
-            }
+            for (int w : tweets_[tid].words_) word_score[w] += tweets_[tid].val();
         }
         double score = 0;
-        for (auto const& [k, v] : word_score) score += std::log(1 + v);
+        for (auto const& [k, v] : word_score) score += std::sqrt(v);
         return score;
     }
 
     double getGain(const int u, const std::vector<int>& S) const override {
         std::unordered_map<int, double> word_score;
         for (int tid : S) {
-            if (tid < tweets_.size()) {
-                for (int w : tweets_[tid].words_)
-                    word_score[w] += tweets_[tid].val();
-            }
+            for (int w : tweets_[tid].words_) word_score[w] += tweets_[tid].val();
         }
-        double score = 0;
-        for (auto const& [k, v] : word_score) score += std::log(1 + v);
 
-        if (u < tweets_.size()) {
-            for (int w : tweets_[u].words_) word_score[w] += tweets_[u].val();
-        }
+        double score = 0;
+        for (auto const& [k, v] : word_score) score += std::sqrt(v);
+
+        for (int w : tweets_[u].words_) word_score[w] += tweets_[u].val();
+
         double score_all = 0;
-        for (auto const& [k, v] : word_score) score_all += std::log(1 + v);
+        for (auto const& [k, v] : word_score) score_all += std::sqrt(v);
 
         return score_all - score;
     }
